@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title> CultureBracket - Oscar Predictions</title>
+  <title>GoldTicket – Oscar Predictions</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -107,7 +107,7 @@
     .cat-card.picked { border-color: #3a3020; background: #1e1c14; }
 
     .cat-icon {
-      width: 100px; height: 100px;
+      width: 40px; height: 40px;
       border-radius: 10px;
       background: #252525;
       display: flex; align-items: center; justify-content: center;
@@ -198,8 +198,8 @@
     }
 
     .nominee-avatar {
-      width: 44px; height: 44px;
-      border-radius: 50%;
+      width: 100px; height: 100px;
+      border-radius: 8px;
       background: #2a2a2a;
       display: flex; align-items: center; justify-content: center;
       font-size: 0.85rem;
@@ -218,7 +218,7 @@
       object-position: center center;
     }
     .nominee-row.selected .nominee-avatar { background: #3a3020; color: #D4A843; }
-    .nominee-row.selected .nominee-avatar img { outline: 2px solid #D4A843; border-radius: 50%; }
+    .nominee-row.selected .nominee-avatar img { outline: 2px solid #D4A843; border-radius: 8px; }
 
     .nominee-info { flex: 1; min-width: 0; }
     .nominee-name   { font-size: 0.95rem; font-weight: 500; color: #e5e5e5; }
@@ -581,7 +581,7 @@ function CategoryPage({ categoryId, picks, onPick, onBack }) {
                 {n.detail && <div className="nominee-detail">{n.detail}</div>}
               </div>
               <div className="radio">
-                {sel && <div className="radio-dot"/>}
+                {sel && <div className="radio-dot"/> }
               </div>
             </div>
           );
