@@ -740,7 +740,13 @@ function App() {
   }, [picks]);
 
   const handlePick = (catId, nominee) => {
-    setPicks(prev => ({ ...prev, [catId]: nominee }));
+    setPicks(prev => {
+      if (prev[catId]?.name === nominee.name) {
+        const { [catId]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [catId]: nominee };
+    });
   };
 
   if (activeCat) {
