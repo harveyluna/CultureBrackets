@@ -1,6 +1,6 @@
-# 🏆 GoldTicket – Oscar Predictions
+# 🏆 CultureBrackets – Oscar Predictions
 
-A sleek dark-themed Oscar predictions app for the **97th Academy Awards**. Pick your winners across 10 categories and track your progress.
+An Oscar predictions app for the **98th Academy Awards**. Pick your winners across 10 categories and track your progress.
 
 ## Features
 
@@ -10,15 +10,9 @@ A sleek dark-themed Oscar predictions app for the **97th Academy Awards**. Pick 
 - Fully static — no backend required
 - Works on mobile and desktop
 
-## Deploy to GitHub Pages
-
-1. Go to **Settings → Pages**
-2. Under **Source**, select `main` branch and `/ (root)` folder
-3. Click **Save**
-
 Site is live at:
 ```
-https://harveyluna.github.io/goldticket/
+https://harveyluna.github.io/culturebrackets/
 ```
 
 ## Local preview
