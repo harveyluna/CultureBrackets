@@ -747,6 +747,41 @@
       transition: background 0.15s;
     }
     .reset-btn:hover { background: #c49530; }
+
+    /* ── Scrollable picks layout ── */
+    .cat-section {
+      margin-bottom: 52px;
+      text-align: left;
+      scroll-margin-top: 68px;
+    }
+    .cat-section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .cat-section-header h2 { font-size: 1.3rem; font-weight: 700; color: #f0e8d5; }
+    .cat-section-header p  { font-size: 0.88rem; color: #888; margin-top: 3px; }
+    .cats-divider {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 52px 0 32px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cats-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #2a2a2a;
+    }
   </style>
 </head>
 <body>
@@ -1387,10 +1422,16 @@ function GroupNav({ group, tab, isAdmin, onTabChange, onInvite }) {
 /* ─────────────────────────────────────────────
    HOME PAGE
 ───────────────────────────────────────────── */
-function HomePage({ picks, winners, onSelect, onClearAll, onExport, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks, isLocked, now }) {
+const initials = (name) => {
+  const parts = name.replace(/['"]/g, '').split(' ');
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.replace(/['"]/g, '').slice(0, 2).toUpperCase();
+};
+
+function HomePage({ picks, winners, onPick, onClearAll, onExport, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks, isLocked, now, groupMembers, groupPicksMap }) {
   const total = CATEGORIES.length;
   const done  = Object.keys(picks).length;
-  const remaining = total - done;
   const [confirmClear, setConfirmClear] = React.useState(false);
   const confirmTimer = React.useRef(null);
 
@@ -1411,6 +1452,10 @@ function HomePage({ picks, winners, onSelect, onClearAll, onExport, currentGroup
     if (!pick) return 'unpicked';
     if (!winner) return 'picked';
     return pick.name === winner ? 'correct' : 'wrong';
+  };
+
+  const scrollToSection = (catId) => {
+    document.getElementById('cat-' + catId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -1466,6 +1511,7 @@ function HomePage({ picks, winners, onSelect, onClearAll, onExport, currentGroup
         </div>
       )}
 
+      {/* Category grid — click to scroll to that section */}
       <div className="categories-grid">
         {CATEGORIES.map(cat => {
           const pick = picks[cat.id];
@@ -1476,7 +1522,7 @@ function HomePage({ picks, winners, onSelect, onClearAll, onExport, currentGroup
           return (
             <div key={cat.id}
               className={`cat-card${status==='correct'?' correct':status==='wrong'?' wrong':status==='picked'?' picked':''}`}
-              onClick={() => onSelect(cat.id)}>
+              onClick={() => scrollToSection(cat.id)}>
               <div className="cat-icon">
                 <TrophyIcon color={pick ? '#D4A843' : '#555'}/>
                 {thumbSrc && <img src={proxyImg(thumbSrc)} alt={cat.name} onError={e => { e.target.style.display='none'; }}/>}
@@ -1510,6 +1556,74 @@ function HomePage({ picks, winners, onSelect, onClearAll, onExport, currentGroup
           );
         })}
       </div>
+
+      {/* All categories inline — one long scrollable list */}
+      <div className="cats-divider">All Categories</div>
+
+      {CATEGORIES.map(cat => {
+        const current = picks[cat.id];
+        const winner  = winners[cat.id];
+        return (
+          <div key={cat.id} id={'cat-' + cat.id} className="cat-section">
+            <div className="cat-section-header">
+              <div className="detail-icon"><TrophyIcon color="#D4A843"/></div>
+              <div>
+                <h2>{cat.name}</h2>
+                <p>{winner ? 'Winner announced' : 'Select your prediction for the winner'}</p>
+              </div>
+            </div>
+
+            {winner && (
+              <div className="winner-banner">
+                🏆 Winner: <strong>{winner}</strong>
+                {current?.name === winner ? ' — Great pick!' : current ? ' — Better luck next time!' : ''}
+              </div>
+            )}
+            {isLocked && (
+              <div className="lock-banner">
+                🔒 Picks are locked — Oscar night is here!
+              </div>
+            )}
+
+            <div className={`nominee-list${isLocked ? ' picks-locked' : ''}`}>
+              {cat.nominees.map(n => {
+                const sel      = current?.name === n.name;
+                const isWinner = winner === n.name;
+                const friendPickers = (groupMembers || []).filter(m =>
+                  m.id !== groupMember?.id &&
+                  groupPicksMap?.[m.id]?.[cat.id]?.name === n.name
+                );
+                return (
+                  <div key={n.name}
+                    className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}${isLocked ? ' locked-row' : ''}`}
+                    onClick={() => onPick(cat.id, n)}>
+                    <div className="nominee-avatar">
+                      {n.photo
+                        ? <img src={proxyImg(n.photo)} alt={n.name} className={n.photoType === 'poster' ? 'poster' : ''}
+                            onError={e => { e.target.style.display='none'; e.target.parentNode.textContent = initials(n.name); }}/>
+                        : initials(n.name)
+                      }
+                    </div>
+                    <div className="nominee-info">
+                      <div className="nominee-name">{n.name}</div>
+                      {n.detail && <div className="nominee-detail">{n.detail}</div>}
+                      {isWinner && <div className="winner-label">🏆 Winner</div>}
+                      {friendPickers.length > 0 && (
+                        <div className="friend-picks">
+                          {friendPickers.map(m => <span key={m.id} className="friend-tag">{m.display_name}</span>)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="radio">
+                      {(sel || isWinner) && <div className="radio-dot"/>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1521,13 +1635,6 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers
   const cat     = CATEGORIES.find(c => c.id === categoryId);
   const current = picks[categoryId];
   const winner  = winners[categoryId];
-
-  const initials = (name) => {
-    const parts = name.replace(/['"]/g, '').split(' ');
-    return parts.length >= 2
-      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-      : name.replace(/['"]/g, '').slice(0, 2).toUpperCase();
-  };
 
   return (
     <div className="detail-page" onClick={e => { if (e.target === e.currentTarget) onBack(); }}>
@@ -1701,7 +1808,6 @@ function App() {
     try { return JSON.parse(localStorage.getItem('goldticket_picks') || '{}'); }
     catch { return {}; }
   });
-  const [activeCat, setActiveCat]         = useState(null);
   const [currentGroup, setCurrentGroup]   = useState(() => {
     try { return JSON.parse(localStorage.getItem('goldticket_group') || 'null'); }
     catch { return null; }
@@ -2246,7 +2352,6 @@ function App() {
 
   const handleTabChange = (tab) => {
     setGroupTab(tab);
-    setActiveCat(null);
     if (tab !== 'picks') loadGroupData();
   };
 
@@ -2259,16 +2364,14 @@ function App() {
     content = <LeaderboardPage members={groupMembers} groupPicksMap={groupPicksMap} winners={winners} sessionId={sessionId.current}/>;
   } else if (currentGroup && groupTab === 'winners' && isAdmin) {
     content = <WinnerEntryPage winners={winners} onSave={handleSaveWinners} onScrape={handleScrape} scraping={scraping}/>;
-  } else if (activeCat) {
-    content = <CategoryPage categoryId={activeCat} picks={picks} winners={winners} onPick={handlePick} onBack={() => setActiveCat(null)}
-      groupMembers={groupMembers} groupPicksMap={groupPicksMap} groupMember={groupMember} isLocked={isLocked}/>;
   } else {
-    content = <HomePage picks={picks} winners={winners} onSelect={setActiveCat}
+    content = <HomePage picks={picks} winners={winners} onPick={handlePick}
       onClearAll={() => setPicks({})} onExport={handleExportPDF}
       currentGroup={currentGroup} groupMember={groupMember}
       onCreateGroup={() => setModal('create')} onLeaveGroup={handleLeaveGroup}
       onRestorePicks={() => setModal('entercode')}
-      isLocked={isLocked} now={now}/>;
+      isLocked={isLocked} now={now}
+      groupMembers={groupMembers} groupPicksMap={groupPicksMap}/>;
   }
 
   return (
