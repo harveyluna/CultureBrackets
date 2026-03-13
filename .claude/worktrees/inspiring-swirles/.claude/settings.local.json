@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/34350242/Documents/GitHub/CultureBrackets status)",
+      "Bash(git -C /Users/34350242/Documents/GitHub/CultureBrackets diff --cached --stat)",
+      "Bash(git -C /Users/34350242/Documents/GitHub/CultureBrackets diff --cached)"
+    ]
+  }
+}
