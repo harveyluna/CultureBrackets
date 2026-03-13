@@ -2363,8 +2363,8 @@ function App() {
       }
       if (currentGroup?.name || currentGroup?.invite_code) {
         const parts = [];
-        if (currentGroup.name) parts.push(currentGroup.name);
-        if (currentGroup.invite_code) parts.push(`Code: ${currentGroup.invite_code}`);
+        if (currentGroup.name) parts.push(`${currentGroup.name} Group`);
+        if (currentGroup.invite_code) parts.push(`Join Code: ${currentGroup.invite_code}`);
         doc.setTextColor(...C_MUTED);
         doc.text(parts.join('  ·  '), PW - MR, MT + 50, { align: 'right' });
       }
