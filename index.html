@@ -1799,13 +1799,14 @@ function App() {
       .then(() => {});
   }, [currentGroup?.id]);
 
-  // ── Load winners on mount / group change ──
+  // ── Load winners + group data on mount / group change ──
   useEffect(() => {
     supabase.from('winners').select('*').then(({ data }) => {
       const w = {};
       (data || []).forEach(r => { w[r.category_id] = r.winner_name; });
       setWinners(w);
     });
+    if (currentGroup) loadGroupData(currentGroup);
   }, [currentGroup?.id]);
 
   // ── Immediate save when user hides the tab / closes the app ──
