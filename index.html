@@ -8,6 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -201,6 +202,8 @@
     .clear-btn.confirm { color: #e05252; }
     .restore-picks-btn { background: none; border: none; color: #555; font-size: 0.78rem; cursor: pointer; padding: 2px 4px; font-family: inherit; text-decoration: underline; text-underline-offset: 2px; transition: color 0.15s; margin-top: 6px; display: block; flex-basis: 100%; text-align: center; }
     .restore-picks-btn:hover { color: #aaa; }
+    .export-pdf-btn { background: none; border: 1px solid #3a3020; color: #9a7a30; font-size: 0.78rem; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-family: inherit; transition: all 0.15s; margin-top: 8px; }
+    .export-pdf-btn:hover { background: #1e1c14; border-color: #D4A843; color: #D4A843; }
     .save-picks-btn { background: #1a2510; border: 1px solid #3a5a20; color: #7ec850; font-size: 0.85rem; cursor: pointer; padding: 7px 18px; border-radius: 8px; transition: all 0.2s; font-family: inherit; margin-top: 10px; }
     .save-picks-btn:hover:not(:disabled) { background: #223015; border-color: #5a8a35; }
     .save-picks-btn:disabled { opacity: 0.6; cursor: default; }
@@ -1381,7 +1384,7 @@ function GroupNav({ group, tab, isAdmin, onTabChange, onInvite }) {
 /* ─────────────────────────────────────────────
    HOME PAGE
 ───────────────────────────────────────────── */
-function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks, isLocked, now }) {
+function HomePage({ picks, winners, onSelect, onClearAll, onExport, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks, isLocked, now }) {
   const total = CATEGORIES.length;
   const done  = Object.keys(picks).length;
   const remaining = total - done;
@@ -1444,6 +1447,7 @@ function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMem
             {confirmClear ? 'Tap again to confirm' : 'Clear all selections'}
           </button>
         )}
+        <button className="export-pdf-btn" onClick={onExport}>📄 Export Ballot as PDF</button>
       </div>
 
       {/* Lock countdown strip */}
@@ -2017,6 +2021,184 @@ function App() {
     }
   };
 
+  const handleExportPDF = () => {
+    if (typeof window.jspdf === 'undefined') {
+      showToast('PDF library not loaded — please refresh and try again.');
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+
+    // Page dimensions & layout
+    const PW = 612, PH = 792;
+    const ML = 34, MR = 34, MT = 34, MB = 28;
+    const COL_GAP = 12;
+    const COL_W = (PW - ML - MR - COL_GAP) / 2;
+
+    // Color palette matching app
+    const C_BG     = [17,  17,  17 ];
+    const C_GOLD   = [212, 168, 67 ];
+    const C_TEXT   = [220, 220, 220];
+    const C_MUTED  = [128, 128, 128];
+    const C_CARD   = [30,  28,  24 ];
+    const C_BORDER = [58,  48,  32 ];
+    const C_CBORDER= [75,  65,  40 ];
+
+    // Type scale
+    const T_TITLE  = 8.5;
+    const T_NOM    = 7.5;
+    const T_DETAIL = 6.0;
+    const LINE_H   = 12;
+    const DETAIL_H = 7;
+    const CARD_PAD = 7;
+    const CHECK    = 7;
+    const CARD_GAP = 7;
+    const HDR_H    = 52;
+
+    const BODY_TOP = MT + HDR_H + 8;
+    const BODY_BOT = PH - MB - 14; // leave room for footer
+
+    // Card height: pad + title-row + rule-gap + nominees + pad
+    const cardH = (cat) => {
+      const hasD = cat.nominees.some(n => n.detail);
+      const rowH = hasD ? LINE_H + DETAIL_H : LINE_H;
+      return CARD_PAD + T_TITLE + 3 + 3 + cat.nominees.length * rowH + CARD_PAD;
+    };
+
+    const fillBg = () => {
+      doc.setFillColor(...C_BG);
+      doc.rect(0, 0, PW, PH, 'F');
+    };
+
+    const drawHeader = () => {
+      // Top gold rule
+      doc.setFillColor(...C_GOLD);
+      doc.rect(ML, MT, PW - ML - MR, 2, 'F');
+      // App name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(17);
+      doc.setTextColor(...C_GOLD);
+      doc.text('CULTURE BRACKETS', ML, MT + 18);
+      // Subtitle
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...C_MUTED);
+      doc.text('2026 Academy Awards Ballot', ML, MT + 30);
+      // Date right-aligned
+      const d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      doc.text(d, PW - MR, MT + 30, { align: 'right' });
+      // Divider
+      doc.setFillColor(58, 48, 32);
+      doc.rect(ML, MT + 38, PW - ML - MR, 0.75, 'F');
+    };
+
+    const drawCard = (cat, x, y) => {
+      const h = cardH(cat);
+      const hasD = cat.nominees.some(n => n.detail);
+      const rowH = hasD ? LINE_H + DETAIL_H : LINE_H;
+
+      // Card background + border
+      doc.setFillColor(...C_CARD);
+      doc.roundedRect(x, y, COL_W, h, 3, 3, 'F');
+      doc.setDrawColor(...C_BORDER);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(x, y, COL_W, h, 3, 3, 'S');
+
+      // Category title
+      const titleY = y + CARD_PAD + T_TITLE;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(T_TITLE);
+      doc.setTextColor(...C_GOLD);
+      doc.text(cat.name.toUpperCase(), x + CARD_PAD, titleY, { maxWidth: COL_W - 2 * CARD_PAD });
+
+      // Rule under title
+      doc.setFillColor(72, 58, 28);
+      doc.rect(x + CARD_PAD, titleY + 2.5, COL_W - 2 * CARD_PAD, 0.5, 'F');
+
+      // Nominees
+      const nomStartY = titleY + 6;
+      cat.nominees.forEach((nom, i) => {
+        const ry    = nomStartY + i * rowH;
+        const isPicked = picks[cat.id]?.name === nom.name;
+        const cx    = x + CARD_PAD;
+        const cy    = ry + (hasD ? 1 : 0);
+
+        // Checkbox
+        if (isPicked) {
+          doc.setFillColor(...C_GOLD);
+          doc.roundedRect(cx, cy, CHECK, CHECK, 1.2, 1.2, 'F');
+          // Checkmark (two line segments)
+          doc.setDrawColor(...C_BG);
+          doc.setLineWidth(1.15);
+          const bx = cx + 1.3, by = cy + CHECK * 0.56;
+          doc.line(bx, by, bx + CHECK * 0.30, by + CHECK * 0.33);
+          doc.line(bx + CHECK * 0.30, by + CHECK * 0.33, bx + CHECK * 0.78, by - CHECK * 0.30);
+        } else {
+          doc.setFillColor(38, 34, 22);
+          doc.setDrawColor(...C_CBORDER);
+          doc.setLineWidth(0.55);
+          doc.roundedRect(cx, cy, CHECK, CHECK, 1.2, 1.2, 'FD');
+        }
+
+        // Nominee name
+        const nx   = cx + CHECK + 3;
+        const nameY = cy + CHECK * 0.78;
+        const maxW  = COL_W - CARD_PAD - CHECK - 3 - CARD_PAD;
+        doc.setFont('helvetica', isPicked ? 'bold' : 'normal');
+        doc.setFontSize(T_NOM);
+        doc.setTextColor(...(isPicked ? C_GOLD : C_TEXT));
+        doc.text(nom.name, nx, nameY, { maxWidth: maxW });
+
+        // Detail (sub-line)
+        if (hasD && nom.detail) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(T_DETAIL);
+          doc.setTextColor(...C_MUTED);
+          doc.text(nom.detail, nx, nameY + DETAIL_H - 1, { maxWidth: maxW });
+        }
+      });
+    };
+
+    // --- Render ---
+    fillBg();
+    drawHeader();
+
+    let col  = 0;
+    let colY = [BODY_TOP, BODY_TOP];
+
+    CATEGORIES.forEach(cat => {
+      const h = cardH(cat);
+      // Overflow check: try next column, then new page
+      if (colY[col] + h > BODY_BOT) {
+        if (col === 0) {
+          col = 1;
+        } else {
+          doc.addPage();
+          fillBg();
+          drawHeader();
+          col  = 0;
+          colY = [BODY_TOP, BODY_TOP];
+        }
+      }
+      const x = col === 0 ? ML : ML + COL_W + COL_GAP;
+      drawCard(cat, x, colY[col]);
+      colY[col] += h + CARD_GAP;
+    });
+
+    // Footer on every page
+    const totalPages = doc.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(...C_MUTED);
+      doc.text(`culturebrackets  ·  Page ${p} of ${totalPages}`, PW / 2, PH - 10, { align: 'center' });
+    }
+
+    doc.save('culture-brackets-ballot.pdf');
+    showToast('📄 Ballot exported!');
+  };
+
   const handleCopyInvite = async () => {
     if (!currentGroup) return;
     const base = window.location.origin + window.location.pathname;
@@ -2079,7 +2261,7 @@ function App() {
       groupMembers={groupMembers} groupPicksMap={groupPicksMap} groupMember={groupMember} isLocked={isLocked}/>;
   } else {
     content = <HomePage picks={picks} winners={winners} onSelect={setActiveCat}
-      onClearAll={() => setPicks({})}
+      onClearAll={() => setPicks({})} onExport={handleExportPDF}
       currentGroup={currentGroup} groupMember={groupMember}
       onCreateGroup={() => setModal('create')} onLeaveGroup={handleLeaveGroup}
       onRestorePicks={() => setModal('entercode')}
