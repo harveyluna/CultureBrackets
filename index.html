@@ -1299,27 +1299,12 @@ function GroupNav({ group, tab, isAdmin, onTabChange, onInvite }) {
 /* ─────────────────────────────────────────────
    HOME PAGE
 ───────────────────────────────────────────── */
-function HomePage({ picks, winners, onSelect, onClearAll, onSavePicks, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks }) {
+function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks }) {
   const total = CATEGORIES.length;
   const done  = Object.keys(picks).length;
   const remaining = total - done;
   const [confirmClear, setConfirmClear] = React.useState(false);
-  const [saving, setSaving]             = React.useState(false);
-  const [savedOk, setSavedOk]           = React.useState(false);
   const confirmTimer = React.useRef(null);
-  const savedTimer   = React.useRef(null);
-
-  const handleSave = async () => {
-    setSaving(true);
-    setSavedOk(false);
-    const ok = await onSavePicks();
-    setSaving(false);
-    if (ok) {
-      setSavedOk(true);
-      clearTimeout(savedTimer.current);
-      savedTimer.current = setTimeout(() => setSavedOk(false), 2500);
-    }
-  };
 
   const handleClear = () => {
     if (!confirmClear) {
@@ -1372,11 +1357,6 @@ function HomePage({ picks, winners, onSelect, onClearAll, onSavePicks, currentGr
         <span className="remain muted">
           {done === 0 ? 'No picks yet' : done === total ? "🎉 All categories picked! You're a movie buff, aren't ya?" : `${done} of ${total} categories picked`}
         </span>
-        {done > 0 && (
-          <button className={`save-picks-btn${savedOk ? ' saved' : ''}`} onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : savedOk ? '✓ Picks saved!' : '💾 Save my picks'}
-          </button>
-        )}
         {done > 0 && (
           <button className={`clear-btn${confirmClear ? ' confirm' : ''}`} onClick={handleClear}>
             {confirmClear ? 'Tap again to confirm' : 'Clear all selections'}
@@ -1935,18 +1915,6 @@ function App() {
     if (tab !== 'picks') loadGroupData();
   };
 
-  // ── Explicit save — called by the Save button ──
-  const handleSavePicks = async () => {
-    try {
-      await saveGlobalPicks(sessionId.current, picks);
-      if (currentGroup && groupMember) await saveGroupPicks(currentGroup.id, groupMember.id, picks);
-      return true;
-    } catch {
-      showToast('⚠️ Could not save. Check your connection and try again.');
-      return false;
-    }
-  };
-
   const isAdmin = currentGroup && currentGroup.created_by === sessionId.current;
 
   // ── Render ──
@@ -1959,7 +1927,7 @@ function App() {
     content = <CategoryPage categoryId={activeCat} picks={picks} winners={winners} onPick={handlePick} onBack={() => setActiveCat(null)}/>;
   } else {
     content = <HomePage picks={picks} winners={winners} onSelect={setActiveCat}
-      onClearAll={() => setPicks({})} onSavePicks={handleSavePicks}
+      onClearAll={() => setPicks({})}
       currentGroup={currentGroup} groupMember={groupMember}
       onCreateGroup={() => setModal('create')} onLeaveGroup={handleLeaveGroup}
       onRestorePicks={() => setModal('entercode')}/>;
