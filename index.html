@@ -1727,7 +1727,11 @@ function App() {
       saveGlobalPicks(sessionId.current, latest);
     };
     document.addEventListener('visibilitychange', handleHide);
-    return () => document.removeEventListener('visibilitychange', handleHide);
+    window.addEventListener('blur', handleHide);
+    return () => {
+      document.removeEventListener('visibilitychange', handleHide);
+      window.removeEventListener('blur', handleHide);
+    };
   }, []);
 
   // ── Sync picks to Supabase ──
