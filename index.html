@@ -1377,7 +1377,8 @@ function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMem
           const pick = picks[cat.id];
           const winner = winners[cat.id];
           const status = getCardStatus(cat.id);
-          const thumbSrc = pick?.photo || cat.nominees[0]?.photo || '';
+          const freshPhoto = pick ? cat.nominees.find(n => n.name === pick.name)?.photo : null;
+          const thumbSrc = freshPhoto || cat.nominees[0]?.photo || '';
           return (
             <div key={cat.id}
               className={`cat-card${status==='correct'?' correct':status==='wrong'?' wrong':status==='picked'?' picked':''}`}
