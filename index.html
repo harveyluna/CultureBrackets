@@ -1343,13 +1343,13 @@ function GroupModal({ mode, groupName, inviteUrl, existingMembers = [], onClose,
           onChange={e => setDisplayName(e.target.value)}
           onKeyDown={async e => {
             if (e.key === 'Enter' && displayName.trim() && !loading) {
-              setLoading(true); await onCreate(displayName.trim()); setLoading(false);
+              setLoading(true); try { await onCreate(displayName.trim()); } finally { setLoading(false); }
             }
           }}
           autoFocus
         />
         <button className="modal-btn" disabled={!displayName.trim() || loading}
-          onClick={async () => { setLoading(true); await onCreate(displayName.trim()); setLoading(false); }}>
+          onClick={async () => { setLoading(true); try { await onCreate(displayName.trim()); } finally { setLoading(false); } }}>
           {loading ? 'Looking up…' : 'Continue'}
         </button>
         <button className="modal-cancel" onClick={onClose}>Cancel</button>
@@ -1994,15 +1994,21 @@ function App() {
     const match = raw.match(/[?&]group=([^&\s]+)/);
     const code = (match ? match[1] : raw).trim();
 
-    const { data: grp } = await supabase.from('groups').select('*').eq('invite_code', code).maybeSingle();
-    if (!grp) { showToast('Group not found. Check the code and try again.'); return; }
+    try {
+      const { data: grp, error: grpErr } = await supabase.from('groups').select('*').eq('invite_code', code).maybeSingle();
+      if (grpErr) throw grpErr;
+      if (!grp) { showToast('Group not found. Check the code and try again.'); return; }
 
-    const { data: mems } = await supabase.from('group_members')
-      .select('display_name').eq('group_id', grp.id).order('joined_at');
-    setPendingGroup(grp);
-    setPendingGroupMembers(mems?.map(m => m.display_name) || []);
-    setDisplayName('');
-    setModal('join');
+      const { data: mems } = await supabase.from('group_members')
+        .select('display_name').eq('group_id', grp.id).order('joined_at');
+      setPendingGroup(grp);
+      setPendingGroupMembers(mems?.map(m => m.display_name) || []);
+      setDisplayName('');
+      setModal('join');
+    } catch (err) {
+      console.error('[entercode]', err);
+      showToast('Something went wrong. Please try again.');
+    }
   };
 
   const handleCopyInvite = async () => {
