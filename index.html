@@ -37,6 +37,60 @@
     }
     .badge svg { width: 13px; height: 13px; }
 
+    /* ── Group Nav ── */
+    .group-nav {
+      background: #161616;
+      border-bottom: 1px solid #2a2a2a;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .group-nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+    }
+    .group-nav-name {
+      color: #D4A843;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 13px 0;
+      margin-right: 16px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nav-tab {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 13px 14px;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nav-tab:hover { color: #ccc; }
+    .nav-tab.active { color: #D4A843; border-bottom-color: #D4A843; }
+    .nav-tab-spacer { flex: 1; min-width: 8px; }
+    .invite-btn {
+      background: #1e1c14;
+      border: 1px solid #3a3020;
+      color: #D4A843;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .invite-btn:hover { background: #2a2518; }
+
     /* ── Home ── */
     .home {
       max-width: 900px;
@@ -56,9 +110,57 @@
       font-size: 1.05rem;
       color: #999;
       max-width: 480px;
-      margin: 0 auto 48px;
+      margin: 0 auto 32px;
       line-height: 1.6;
     }
+
+    /* ── Group section on home ── */
+    .group-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .group-strip-info {
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .group-strip-info strong { color: #f0e8d5; font-weight: 700; }
+    .group-strip-btn {
+      background: none;
+      border: 1px solid #2a2a2a;
+      color: #666;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .group-strip-btn:hover { border-color: #444; color: #ccc; }
+    .create-group-btn {
+      background: #1e1c14;
+      border: 1px solid #3a3020;
+      color: #D4A843;
+      border-radius: 10px;
+      padding: 9px 20px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.15s;
+    }
+    .create-group-btn:hover { background: #2a2518; }
 
     /* ── Progress ring ── */
     .progress-card {
@@ -106,6 +208,8 @@
     }
     .cat-card:hover { border-color: #444; background: #222; }
     .cat-card.picked { border-color: #3a3020; background: #1e1c14; }
+    .cat-card.correct { border-color: #1a4020; background: #131f14; }
+    .cat-card.wrong   { border-color: #3a1a1a; background: #1f1313; }
 
     .cat-icon {
       width: 100px; height: 100px; min-width: 100px; min-height: 100px;
@@ -125,6 +229,7 @@
     .cat-sub   { font-size: 0.78rem; color: #666; margin-top: 2px; }
     .cat-pick  { font-size: 0.82rem; color: #D4A843; margin-top: 6px; font-weight: 600; }
     .cat-pick-detail { font-size: 0.76rem; color: #888; }
+    .cat-winner { font-size: 0.76rem; color: #666; margin-top: 3px; }
 
     .cat-right {
       display: flex; align-items: center;
@@ -136,6 +241,8 @@
       background: #D4A843;
       display: flex; align-items: center; justify-content: center;
     }
+    .check-circle.green { background: #2d8a3e; }
+    .check-circle.red   { background: #8a2d2d; }
     .check-circle svg { width: 13px; height: 13px; }
     .arrow-circle {
       width: 28px; height: 28px;
@@ -182,6 +289,20 @@
     .detail-header h2 { font-size: 1.6rem; font-weight: 700; color: #f0e8d5; }
     .detail-header p  { font-size: 0.9rem; color: #888; margin-top: 4px; }
 
+    /* ── Winner banner on detail page ── */
+    .winner-banner {
+      background: #1a4020;
+      border: 1px solid #2d6030;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      color: #5fb870;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     /* ── Nominee row ── */
     .nominee-list { display: flex; flex-direction: column; gap: 10px; }
     .nominee-row {
@@ -199,6 +320,10 @@
     .nominee-row.selected {
       border-color: #D4A843;
       background: #1e1c14;
+    }
+    .nominee-row.winner-row {
+      border-color: #2d6030;
+      background: #131f14;
     }
 
     .nominee-avatar {
@@ -223,11 +348,13 @@
     }
     .nominee-row.selected .nominee-avatar { background: #3a3020; color: #D4A843; }
     .nominee-row.selected .nominee-avatar img { outline: 2px solid #D4A843; border-radius: 8px; }
+    .nominee-row.winner-row .nominee-avatar img { outline: 2px solid #2d6030; border-radius: 8px; }
 
     .nominee-info { flex: 1; min-width: 0; }
     .nominee-name   { font-size: 0.95rem; font-weight: 500; color: #e5e5e5; }
     .nominee-detail { font-size: 0.8rem; color: #666; margin-top: 2px; }
     .nominee-row.selected .nominee-name { color: #f0e8d5; }
+    .winner-label { font-size: 0.72rem; color: #5fb870; font-weight: 700; margin-top: 3px; }
 
     .radio {
       width: 20px; height: 20px;
@@ -242,10 +369,240 @@
       border-color: #D4A843;
       background: #D4A843;
     }
+    .nominee-row.winner-row .radio {
+      border-color: #2d6030;
+      background: #2d6030;
+    }
     .radio-dot {
       width: 8px; height: 8px;
       border-radius: 50%;
       background: #111;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal {
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
+      border-radius: 20px;
+      padding: 36px 32px;
+      max-width: 440px;
+      width: 100%;
+    }
+    .modal h2 { font-size: 1.5rem; font-weight: 700; color: #f0e8d5; margin-bottom: 8px; }
+    .modal p  { color: #888; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.6; }
+    .modal-input {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #e5e5e5;
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    .modal-input:focus { border-color: #D4A843; }
+    .modal-btn {
+      width: 100%;
+      background: #D4A843;
+      color: #111;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .modal-btn:hover { background: #c49530; }
+    .modal-btn:disabled { background: #444; color: #666; cursor: not-allowed; }
+    .modal-cancel {
+      width: 100%;
+      background: none;
+      border: none;
+      color: #666;
+      padding: 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: color 0.15s;
+      font-family: inherit;
+    }
+    .modal-cancel:hover { color: #999; }
+    .invite-box {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .invite-box span {
+      flex: 1;
+      font-size: 0.78rem;
+      color: #888;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: #2a2a2a;
+      border: none;
+      color: #D4A843;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .copy-btn:hover { background: #333; }
+
+    /* ── Leaderboard ── */
+    .leaderboard-page {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+    .leaderboard-page h2 { font-size: 1.8rem; font-weight: 700; color: #f0e8d5; margin-bottom: 6px; }
+    .page-sub { color: #666; font-size: 0.9rem; margin-bottom: 32px; }
+    .lb-row {
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .lb-row.me { border-color: #3a3020; background: #1e1c14; }
+    .lb-rank { font-size: 1.4rem; width: 30px; text-align: center; flex-shrink: 0; }
+    .lb-name { flex: 1; font-size: 0.95rem; font-weight: 600; color: #e5e5e5; }
+    .lb-name .you-badge {
+      font-size: 0.7rem;
+      background: #2a2518;
+      color: #D4A843;
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: 8px;
+      font-weight: 700;
+    }
+    .lb-score { text-align: right; }
+    .lb-score .big { font-size: 1.3rem; font-weight: 800; color: #f0e8d5; }
+    .lb-score .of { font-size: 0.75rem; color: #555; }
+    .lb-score .picks { font-size: 0.75rem; color: #555; margin-top: 1px; }
+    .lb-no-winners {
+      text-align: center;
+      padding: 48px 20px;
+      color: #555;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ── Winners Entry ── */
+    .winners-page {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+    .winners-page h2 { font-size: 1.8rem; font-weight: 700; color: #f0e8d5; margin-bottom: 6px; }
+    .scrape-btn {
+      background: #1e1c14;
+      border: 1px solid #3a3020;
+      color: #D4A843;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .scrape-btn:hover { background: #2a2518; }
+    .scrape-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .winner-cat-card {
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 8px;
+    }
+    .winner-cat-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .winner-select {
+      width: 100%;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e5e5e5;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      font-family: inherit;
+      appearance: auto;
+    }
+    .winner-select:focus { border-color: #D4A843; }
+    .winner-select.is-set { border-color: #3a3020; background: #141210; color: #D4A843; }
+    .save-winners-btn {
+      background: #D4A843;
+      color: #111;
+      border: none;
+      border-radius: 10px;
+      padding: 13px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .save-winners-btn:hover { background: #c49530; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #e5e5e5;
+      border-radius: 10px;
+      padding: 11px 22px;
+      font-size: 0.88rem;
+      z-index: 200;
+      pointer-events: none;
+      white-space: nowrap;
+      animation: fadeup 0.2s ease;
+    }
+    @keyframes fadeup {
+      from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 
     /* ── All done ── */
@@ -253,14 +610,8 @@
       text-align: center;
       padding: 80px 20px;
     }
-    .all-done .trophy-big {
-      font-size: 4rem;
-      margin-bottom: 24px;
-    }
-    .all-done h2 {
-      font-size: 2rem; font-weight: 700;
-      color: #f0e8d5; margin-bottom: 12px;
-    }
+    .all-done .trophy-big { font-size: 4rem; margin-bottom: 24px; }
+    .all-done h2 { font-size: 2rem; font-weight: 700; color: #f0e8d5; margin-bottom: 12px; }
     .all-done p { color: #888; font-size: 1rem; }
     .reset-btn {
       margin-top: 32px;
@@ -298,6 +649,97 @@ function getSessionId() {
     localStorage.setItem('goldticket_session', id);
   }
   return id;
+}
+
+/* ─────────────────────────────────────────────
+   WIKIPEDIA SCRAPER
+───────────────────────────────────────────── */
+async function scrapeWikipediaWinners() {
+  const url = 'https://en.wikipedia.org/w/api.php?' + new URLSearchParams({
+    action: 'parse',
+    page: '98th_Academy_Awards',
+    prop: 'text',
+    format: 'json',
+    origin: '*',
+  });
+
+  const res = await fetch(url);
+  const data = await res.json();
+  const html = data?.parse?.text?.['*'];
+  if (!html) throw new Error('Could not fetch Wikipedia page');
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const titleToId = {
+    'Best Picture': 'best_picture',
+    'Best Director': 'best_director',
+    'Best Actor': 'best_actor',
+    'Best Actress': 'best_actress',
+    'Best Supporting Actor': 'best_supporting_actor',
+    'Best Supporting Actress': 'best_supporting_actress',
+    'Best Adapted Screenplay': 'best_adapted_screenplay',
+    'Best Original Screenplay': 'best_original_screenplay',
+    'Best Animated Feature': 'best_animated_feature',
+    'Best Animated Feature Film': 'best_animated_feature',
+    'Best International Feature Film': 'best_international_feature',
+    'Best Cinematography': 'best_cinematography',
+    'Best Film Editing': 'best_film_editing',
+    'Best Original Score': 'best_original_score',
+    'Best Original Song': 'best_original_song',
+    'Best Production Design': 'best_production_design',
+    'Best Costume Design': 'best_costume_design',
+    'Best Makeup and Hairstyling': 'best_makeup_hairstyling',
+    'Best Sound': 'best_sound',
+    'Best Visual Effects': 'best_visual_effects',
+    'Best Documentary Feature Film': 'best_documentary_feature',
+    'Best Casting': 'best_casting',
+  };
+
+  const winners = {};
+  const headlineEls = doc.querySelectorAll('.mw-headline');
+
+  headlineEls.forEach(headline => {
+    const title = headline.textContent.trim();
+    const catId = titleToId[title];
+    if (!catId) return;
+
+    const heading = headline.closest('h2, h3, h4');
+    let el = heading?.nextElementSibling;
+
+    while (el && !['H2', 'H3', 'H4'].includes(el.tagName)) {
+      // Strategy 1: bold text = winner
+      const bolds = el.querySelectorAll('b');
+      for (const bold of bolds) {
+        const boldText = bold.textContent.trim().replace(/["'""]/g, '');
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (cat) {
+          const match = cat.nominees.find(n => {
+            const nName = n.name.replace(/["'""]/g, '').toLowerCase();
+            const bText = boldText.toLowerCase();
+            return bText === nName || bText.includes(nName) || nName.includes(bText);
+          });
+          if (match) { winners[catId] = match.name; return; }
+        }
+      }
+      // Strategy 2: highlighted table row
+      const winnerRows = el.querySelectorAll('[class*="winner"], [style*="background:#FAEB86"], [style*="background: #FAEB86"], [style*="background:#eedd82"]');
+      for (const row of winnerRows) {
+        const rowText = row.textContent;
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (cat) {
+          const match = cat.nominees.find(n => {
+            const nName = n.name.replace(/["'""]/g, '').toLowerCase();
+            return rowText.toLowerCase().includes(nName);
+          });
+          if (match) { winners[catId] = match.name; return; }
+        }
+      }
+      el = el.nextElementSibling;
+    }
+  });
+
+  return winners;
 }
 
 /* ─────────────────────────────────────────────
@@ -456,11 +898,11 @@ const CATEGORIES = [
     id: 'best_original_song',
     name: 'Best Original Song',
     nominees: [
-      { name: '"Golden"',           detail: 'KPop Demon Hunters',        photo: 'https://upload.wikimedia.org/wikipedia/en/9/93/KPDHposter.jpeg', photoType: 'poster' },
-      { name: '"I Lied to You"',    detail: 'Sinners',                   photo: 'https://upload.wikimedia.org/wikipedia/en/8/8d/Sinners_2025_film_poster.jpg', photoType: 'poster' },
-      { name: '"Dear Me"',          detail: 'Diane Warren: Relentless',  photo: '', photoType: 'poster' },
-      { name: '"Sweet Dreams of Joy"', detail: 'Viva Verdi!',            photo: '', photoType: 'poster' },
-      { name: '"Train Dreams"',     detail: 'Train Dreams',              photo: 'https://upload.wikimedia.org/wikipedia/en/5/58/Train_Dreams_poster.jpeg', photoType: 'poster' },
+      { name: '"Golden"',              detail: 'KPop Demon Hunters',        photo: 'https://upload.wikimedia.org/wikipedia/en/9/93/KPDHposter.jpeg', photoType: 'poster' },
+      { name: '"I Lied to You"',       detail: 'Sinners',                   photo: 'https://upload.wikimedia.org/wikipedia/en/8/8d/Sinners_2025_film_poster.jpg', photoType: 'poster' },
+      { name: '"Dear Me"',             detail: 'Diane Warren: Relentless',  photo: '', photoType: 'poster' },
+      { name: '"Sweet Dreams of Joy"', detail: 'Viva Verdi!',               photo: '', photoType: 'poster' },
+      { name: '"Train Dreams"',        detail: 'Train Dreams',              photo: 'https://upload.wikimedia.org/wikipedia/en/5/58/Train_Dreams_poster.jpeg', photoType: 'poster' },
     ],
   },
   {
@@ -489,11 +931,11 @@ const CATEGORIES = [
     id: 'best_makeup_hairstyling',
     name: 'Best Makeup and Hairstyling',
     nominees: [
-      { name: 'Frankenstein',        detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/9/94/Frankenstein_2025_film_poster.jpg', photoType: 'poster' },
-      { name: 'Kokuho',              detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/2/2e/Kokuho_poster.jpg', photoType: 'poster' },
-      { name: 'Sinners',             detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/8/8d/Sinners_2025_film_poster.jpg', photoType: 'poster' },
+      { name: 'Frankenstein',         detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/9/94/Frankenstein_2025_film_poster.jpg', photoType: 'poster' },
+      { name: 'Kokuho',               detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/2/2e/Kokuho_poster.jpg', photoType: 'poster' },
+      { name: 'Sinners',              detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/8/8d/Sinners_2025_film_poster.jpg', photoType: 'poster' },
       { name: 'The Smashing Machine', detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/4/47/The_Smashing_Machine_%282025_film%29.jpg', photoType: 'poster' },
-      { name: 'The Ugly Stepsister', detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/c/c1/The_Ugly_Stepsister_film_poster.jpg', photoType: 'poster' },
+      { name: 'The Ugly Stepsister',  detail: '', photo: 'https://upload.wikimedia.org/wikipedia/en/c/c1/The_Ugly_Stepsister_film_poster.jpg', photoType: 'poster' },
     ],
   },
   {
@@ -554,22 +996,33 @@ const TrophyIcon = ({ color = '#D4A843' }) => (
     <path d="M8 19h8"/>
   </svg>
 );
-
+const UsersIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:15,height:15}}>
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+    <path d="M16 3.13a4 4 0 010 7.75"/>
+  </svg>
+);
 const ArrowRight = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 18l6-6-6-6"/>
   </svg>
 );
-
 const ArrowLeft = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
 );
-
-const CheckIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+const CheckIcon = ({ color = '#111' }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+const XIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 );
 
@@ -577,20 +1030,14 @@ const CheckIcon = () => (
    PROGRESS RING
 ───────────────────────────────────────────── */
 function ProgressRing({ value, total }) {
-  const r = 40;
-  const circ = 2 * Math.PI * r;
-  const pct = total === 0 ? 0 : value / total;
-  const dash = pct * circ;
-
+  const r = 40, circ = 2 * Math.PI * r;
+  const dash = (total === 0 ? 0 : value / total) * circ;
   return (
     <div className="ring-wrap">
       <svg width="100" height="100" viewBox="0 0 100 100">
         <circle cx="50" cy="50" r={r} stroke="#2a2a2a" strokeWidth="7" fill="none"/>
-        <circle
-          cx="50" cy="50" r={r}
-          stroke="#D4A843" strokeWidth="7" fill="none"
-          strokeDasharray={`${dash} ${circ}`}
-          strokeLinecap="round"
+        <circle cx="50" cy="50" r={r} stroke="#D4A843" strokeWidth="7" fill="none"
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           style={{ transition: 'stroke-dasharray 0.4s ease' }}
         />
       </svg>
@@ -603,25 +1050,154 @@ function ProgressRing({ value, total }) {
 }
 
 /* ─────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────── */
+function Toast({ msg }) {
+  return msg ? <div className="toast">{msg}</div> : null;
+}
+
+/* ─────────────────────────────────────────────
+   GROUP MODAL
+───────────────────────────────────────────── */
+function GroupModal({ mode, groupName, inviteUrl, onClose, onCreate, onJoin }) {
+  const [name, setName] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
+  if (mode === 'created') return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <h2>🎉 Group Created!</h2>
+        <p>Share this invite link with friends so they can join <strong style={{color:'#f0e8d5'}}>{groupName}</strong>.</p>
+        <div className="invite-box">
+          <span>{inviteUrl}</span>
+          <button className="copy-btn" onClick={handleCopy}>{copied ? '✓ Copied!' : 'Copy'}</button>
+        </div>
+        <button className="modal-btn" onClick={onClose}>Start Picking →</button>
+      </div>
+    </div>
+  );
+
+  if (mode === 'create') return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <h2>Create a Group</h2>
+        <p>Name your group and invite friends to pick together and compete on the leaderboard.</p>
+        <input className="modal-input" placeholder="Group name (e.g. Movie Night Crew)" value={name}
+          onChange={e => setName(e.target.value)} autoFocus />
+        <input className="modal-input" placeholder="Your display name" value={displayName}
+          onChange={e => setDisplayName(e.target.value)}
+          onKeyDown={async e => {
+            if (e.key === 'Enter' && name.trim() && displayName.trim() && !loading) {
+              setLoading(true);
+              await onCreate(name.trim(), displayName.trim());
+              setLoading(false);
+            }
+          }}
+        />
+        <button className="modal-btn" disabled={!name.trim() || !displayName.trim() || loading}
+          onClick={async () => { setLoading(true); await onCreate(name.trim(), displayName.trim()); setLoading(false); }}>
+          {loading ? 'Creating…' : 'Create Group'}
+        </button>
+        <button className="modal-cancel" onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+
+  if (mode === 'join') return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <h2>Join Group</h2>
+        <p>You've been invited to join <strong style={{color:'#f0e8d5'}}>{groupName}</strong>. Enter a display name so your friends can identify you.</p>
+        <input className="modal-input" placeholder="Your display name" value={displayName}
+          onChange={e => setDisplayName(e.target.value)}
+          onKeyDown={async e => {
+            if (e.key === 'Enter' && displayName.trim() && !loading) {
+              setLoading(true);
+              await onJoin(displayName.trim());
+              setLoading(false);
+            }
+          }}
+          autoFocus
+        />
+        <button className="modal-btn" disabled={!displayName.trim() || loading}
+          onClick={async () => { setLoading(true); await onJoin(displayName.trim()); setLoading(false); }}>
+          {loading ? 'Joining…' : 'Join Group'}
+        </button>
+        <button className="modal-cancel" onClick={() => window.history.replaceState({}, '', window.location.pathname)}>Cancel</button>
+      </div>
+    </div>
+  );
+
+  return null;
+}
+
+/* ─────────────────────────────────────────────
+   GROUP NAV
+───────────────────────────────────────────── */
+function GroupNav({ group, tab, isAdmin, onTabChange, onInvite }) {
+  return (
+    <div className="group-nav">
+      <div className="group-nav-inner">
+        <span className="group-nav-name">🏆 {group.name}</span>
+        <button className={`nav-tab${tab==='picks'?' active':''}`} onClick={() => onTabChange('picks')}>My Picks</button>
+        <button className={`nav-tab${tab==='leaderboard'?' active':''}`} onClick={() => onTabChange('leaderboard')}>Leaderboard</button>
+        {isAdmin && <button className={`nav-tab${tab==='winners'?' active':''}`} onClick={() => onTabChange('winners')}>Set Winners</button>}
+        <div className="nav-tab-spacer"/>
+        <button className="invite-btn" onClick={onInvite}>🔗 Invite</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    HOME PAGE
 ───────────────────────────────────────────── */
-function HomePage({ picks, onSelect }) {
+function HomePage({ picks, winners, onSelect, currentGroup, groupMember, onCreateGroup, onLeaveGroup }) {
   const total = CATEGORIES.length;
   const done  = Object.keys(picks).length;
   const remaining = total - done;
 
+  const getCardStatus = (catId) => {
+    const pick = picks[catId];
+    const winner = winners[catId];
+    if (!pick) return 'unpicked';
+    if (!winner) return 'picked';
+    return pick.name === winner ? 'correct' : 'wrong';
+  };
+
   return (
     <div className="home">
-      <div className="badge">
-        <TrophyIcon color="#D4A843"/>
-        98TH ACADEMY AWARDS
-      </div>
-
+      <div className="badge"><TrophyIcon color="#D4A843"/> 98TH ACADEMY AWARDS</div>
       <h1>Oscar<br/>Predictions</h1>
-      <p className="subtitle">
-        Make your picks across {total} categories and see how<br/>
-        you stack up on Hollywood's biggest night.
-      </p>
+      <p className="subtitle">Make your picks across {total} categories and see how you stack up on Hollywood's biggest night.</p>
+
+      {/* Group strip */}
+      {!currentGroup ? (
+        <div className="group-strip">
+          <button className="create-group-btn" onClick={onCreateGroup}>
+            <UsersIcon/> Create a Group
+          </button>
+        </div>
+      ) : (
+        <div className="group-strip">
+          <div className="group-strip-info">
+            <span>In</span>
+            <strong>{currentGroup.name}</strong>
+            {groupMember && <span>as <strong>{groupMember.display_name}</strong></span>}
+          </div>
+          <button className="group-strip-btn" onClick={onLeaveGroup}>Leave</button>
+        </div>
+      )}
 
       <div className="progress-card">
         <ProgressRing value={done} total={total}/>
@@ -633,22 +1209,16 @@ function HomePage({ picks, onSelect }) {
       <div className="categories-grid">
         {CATEGORIES.map(cat => {
           const pick = picks[cat.id];
+          const winner = winners[cat.id];
+          const status = getCardStatus(cat.id);
           const thumbSrc = pick?.photo || cat.nominees[0]?.photo || '';
           return (
-            <div
-              key={cat.id}
-              className={`cat-card${pick ? ' picked' : ''}`}
-              onClick={() => onSelect(cat.id)}
-            >
+            <div key={cat.id}
+              className={`cat-card${status==='correct'?' correct':status==='wrong'?' wrong':status==='picked'?' picked':''}`}
+              onClick={() => onSelect(cat.id)}>
               <div className="cat-icon">
                 <TrophyIcon color={pick ? '#D4A843' : '#555'}/>
-                {thumbSrc && (
-                  <img
-                    src={thumbSrc}
-                    alt={cat.name}
-                    onError={e => { e.target.style.display = 'none'; }}
-                  />
-                )}
+                {thumbSrc && <img src={thumbSrc} alt={cat.name} onError={e => { e.target.style.display='none'; }}/>}
               </div>
               <div className="cat-body">
                 <div className="cat-title">{cat.name}</div>
@@ -658,11 +1228,16 @@ function HomePage({ picks, onSelect }) {
                     <div className="cat-pick small" style={{marginTop:8,fontSize:'0.72rem',color:'#888',fontWeight:400}}>Your pick</div>
                     <div className="cat-pick">{pick.name}</div>
                     {pick.detail && <div className="cat-pick-detail">{pick.detail}</div>}
+                    {winner && <div className="cat-winner">Winner: {winner}</div>}
                   </>
                 )}
               </div>
               <div className="cat-right">
-                {pick ? (
+                {status === 'correct' ? (
+                  <div className="check-circle green"><CheckIcon color="#fff"/></div>
+                ) : status === 'wrong' ? (
+                  <div className="check-circle red"><XIcon/></div>
+                ) : pick ? (
                   <div className="check-circle"><CheckIcon/></div>
                 ) : (
                   <div className="arrow-circle"><ArrowRight/></div>
@@ -679,9 +1254,10 @@ function HomePage({ picks, onSelect }) {
 /* ─────────────────────────────────────────────
    CATEGORY PAGE
 ───────────────────────────────────────────── */
-function CategoryPage({ categoryId, picks, onPick, onBack }) {
-  const cat   = CATEGORIES.find(c => c.id === categoryId);
+function CategoryPage({ categoryId, picks, winners, onPick, onBack }) {
+  const cat     = CATEGORIES.find(c => c.id === categoryId);
   const current = picks[categoryId];
+  const winner  = winners[categoryId];
 
   const initials = (name) => {
     const parts = name.replace(/['"]/g, '').split(' ');
@@ -692,46 +1268,45 @@ function CategoryPage({ categoryId, picks, onPick, onBack }) {
 
   return (
     <div className="detail-page">
-      <button className="back-btn" onClick={onBack}>
-        <ArrowLeft/> Back to categories
-      </button>
+      <button className="back-btn" onClick={onBack}><ArrowLeft/> Back to categories</button>
 
       <div className="detail-header">
-        <div className="detail-icon">
-          <TrophyIcon color="#D4A843"/>
-        </div>
+        <div className="detail-icon"><TrophyIcon color="#D4A843"/></div>
         <div>
           <h2>{cat.name}</h2>
-          <p>Select your prediction for the winner</p>
+          <p>{winner ? `Winner announced` : 'Select your prediction for the winner'}</p>
         </div>
       </div>
 
+      {winner && (
+        <div className="winner-banner">
+          🏆 Winner: <strong>{winner}</strong>
+          {current?.name === winner ? ' — Great pick!' : current ? ' — Better luck next time!' : ''}
+        </div>
+      )}
+
       <div className="nominee-list">
         {cat.nominees.map(n => {
-          const sel = current && current.name === n.name;
+          const sel      = current?.name === n.name;
+          const isWinner = winner === n.name;
           return (
-            <div
-              key={n.name}
-              className={`nominee-row${sel ? ' selected' : ''}`}
-              onClick={() => onPick(categoryId, n)}
-            >
+            <div key={n.name}
+              className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}`}
+              onClick={() => onPick(categoryId, n)}>
               <div className="nominee-avatar">
                 {n.photo
-                  ? <img
-                      src={n.photo}
-                      alt={n.name}
-                      className={n.photoType === 'poster' ? 'poster' : ''}
-                      onError={e => { e.target.style.display='none'; e.target.parentNode.textContent = initials(n.name); }}
-                    />
+                  ? <img src={n.photo} alt={n.name} className={n.photoType === 'poster' ? 'poster' : ''}
+                      onError={e => { e.target.style.display='none'; e.target.parentNode.textContent = initials(n.name); }}/>
                   : initials(n.name)
                 }
               </div>
               <div className="nominee-info">
                 <div className="nominee-name">{n.name}</div>
                 {n.detail && <div className="nominee-detail">{n.detail}</div>}
+                {isWinner && <div className="winner-label">🏆 Winner</div>}
               </div>
               <div className="radio">
-                {sel && <div className="radio-dot"/>}
+                {(sel || isWinner) && <div className="radio-dot"/>}
               </div>
             </div>
           );
@@ -742,26 +1317,166 @@ function CategoryPage({ categoryId, picks, onPick, onBack }) {
 }
 
 /* ─────────────────────────────────────────────
+   LEADERBOARD PAGE
+───────────────────────────────────────────── */
+function LeaderboardPage({ members, groupPicksMap, winners, sessionId }) {
+  const totalCats   = CATEGORIES.length;
+  const winnersSet  = Object.keys(winners).length;
+
+  const ranked = members.map(m => {
+    const mPicks = groupPicksMap[m.session_id] || {};
+    let score = 0;
+    for (const catId in winners) {
+      if (mPicks[catId]?.name === winners[catId]) score++;
+    }
+    const pickCount = Object.keys(mPicks).length;
+    return { ...m, score, pickCount };
+  }).sort((a, b) => b.score - a.score || b.pickCount - a.pickCount || a.display_name.localeCompare(b.display_name));
+
+  const rankEmoji = i => ['🥇','🥈','🥉'][i] ?? `${i+1}`;
+
+  return (
+    <div className="leaderboard-page">
+      <h2>Leaderboard</h2>
+      <p className="page-sub">
+        {winnersSet === 0
+          ? 'Scores will appear once winners are announced.'
+          : `${winnersSet} of ${totalCats} winners announced`}
+      </p>
+
+      {members.length === 0 ? (
+        <div className="lb-no-winners">
+          No members yet.<br/>Share the invite link to get friends to join!
+        </div>
+      ) : (
+        ranked.map((m, i) => (
+          <div key={m.session_id} className={`lb-row${m.session_id === sessionId ? ' me' : ''}`}>
+            <div className="lb-rank">{rankEmoji(i)}</div>
+            <div className="lb-name">
+              {m.display_name}
+              {m.session_id === sessionId && <span className="you-badge">you</span>}
+            </div>
+            <div className="lb-score">
+              {winnersSet > 0 ? (
+                <>
+                  <div className="big">{m.score}<span className="of"> / {winnersSet}</span></div>
+                  <div className="picks">{m.pickCount} / {totalCats} picks made</div>
+                </>
+              ) : (
+                <div className="picks">{m.pickCount} / {totalCats} picks made</div>
+              )}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   WINNER ENTRY PAGE
+───────────────────────────────────────────── */
+function WinnerEntryPage({ winners, onSave, onScrape, scraping }) {
+  const [local, setLocal] = useState({ ...winners });
+
+  useEffect(() => { setLocal({ ...winners }); }, [winners]);
+
+  return (
+    <div className="winners-page">
+      <h2>Set Winners</h2>
+      <p className="page-sub">Manually select winners or auto-fill from Wikipedia after the ceremony.</p>
+
+      <button className="scrape-btn" onClick={onScrape} disabled={scraping}>
+        {scraping ? '⏳ Fetching from Wikipedia…' : '🌐 Auto-fill from Wikipedia'}
+      </button>
+
+      {CATEGORIES.map(cat => (
+        <div key={cat.id} className="winner-cat-card">
+          <div className="winner-cat-name">{cat.name}</div>
+          <select
+            className={`winner-select${local[cat.id] ? ' is-set' : ''}`}
+            value={local[cat.id] || ''}
+            onChange={e => setLocal(prev => {
+              const next = { ...prev };
+              if (e.target.value) next[cat.id] = e.target.value;
+              else delete next[cat.id];
+              return next;
+            })}>
+            <option value="">— Not announced yet —</option>
+            {cat.nominees.map(n => (
+              <option key={n.name} value={n.name}>{n.name}{n.detail ? ` — ${n.detail}` : ''}</option>
+            ))}
+          </select>
+        </div>
+      ))}
+
+      <button className="save-winners-btn" onClick={() => onSave(local)}>Save Winners</button>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    APP ROOT
 ───────────────────────────────────────────── */
 function App() {
   const [picks, setPicks] = useState(() => {
-    try {
-      const saved = localStorage.getItem('goldticket_picks');
-      return saved ? JSON.parse(saved) : {};
-    } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem('goldticket_picks') || '{}'); }
+    catch { return {}; }
   });
-  const [activeCat, setActiveCat] = useState(null);
-  const sessionId = useRef(getSessionId());
-  const saveTimeout = useRef(null);
+  const [activeCat, setActiveCat]         = useState(null);
+  const [currentGroup, setCurrentGroup]   = useState(() => {
+    try { return JSON.parse(localStorage.getItem('goldticket_group') || 'null'); }
+    catch { return null; }
+  });
+  const [groupMember, setGroupMember]     = useState(() => {
+    try { return JSON.parse(localStorage.getItem('goldticket_member') || 'null'); }
+    catch { return null; }
+  });
+  const [groupTab, setGroupTab]           = useState('picks');
+  const [groupMembers, setGroupMembers]   = useState([]);
+  const [groupPicksMap, setGroupPicksMap] = useState({});
+  const [winners, setWinners]             = useState({});
+  const [modal, setModal]                 = useState(null);
+  const [pendingGroup, setPendingGroup]   = useState(null);
+  const [toast, setToast]                 = useState('');
+  const [scraping, setScraping]           = useState(false);
+  const [createdGroupName, setCreatedGroupName] = useState('');
+  const [inviteUrl, setInviteUrl]         = useState('');
 
-  // Load picks from Supabase on mount
+  const sessionId      = useRef(getSessionId());
+  const saveTimeout    = useRef(null);
+  const currentGroupRef = useRef(currentGroup);
+  useEffect(() => { currentGroupRef.current = currentGroup; }, [currentGroup]);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2800); };
+
+  // ── Check URL for ?group= invite code ──
   useEffect(() => {
-    supabase
-      .from('picks')
-      .select('picks')
-      .eq('session_id', sessionId.current)
-      .maybeSingle()
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('group');
+    if (!code) return;
+    supabase.from('groups').select('*').eq('invite_code', code).maybeSingle()
+      .then(({ data: grp }) => {
+        if (!grp) { showToast('Group not found.'); return; }
+        supabase.from('group_members').select('*')
+          .eq('group_id', grp.id).eq('session_id', sessionId.current).maybeSingle()
+          .then(({ data: mem }) => {
+            if (mem) {
+              setCurrentGroup(grp);
+              setGroupMember(mem);
+              localStorage.setItem('goldticket_group', JSON.stringify(grp));
+              localStorage.setItem('goldticket_member', JSON.stringify(mem));
+            } else {
+              setPendingGroup(grp);
+              setModal('join');
+            }
+          });
+      });
+  }, []);
+
+  // ── Load picks from Supabase on mount ──
+  useEffect(() => {
+    supabase.from('picks').select('picks').eq('session_id', sessionId.current).maybeSingle()
       .then(({ data }) => {
         if (data?.picks && Object.keys(data.picks).length > 0) {
           setPicks(data.picks);
@@ -770,19 +1485,51 @@ function App() {
       });
   }, []);
 
-  // Sync picks to localStorage + Supabase (debounced)
+  // ── Load winners on mount / group change ──
+  useEffect(() => {
+    supabase.from('winners').select('*').then(({ data }) => {
+      const w = {};
+      (data || []).forEach(r => { w[r.category_id] = r.winner_name; });
+      setWinners(w);
+    });
+  }, [currentGroup?.id]);
+
+  // ── Sync picks to Supabase (debounced) ──
   useEffect(() => {
     localStorage.setItem('goldticket_picks', JSON.stringify(picks));
     clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
-      supabase.from('picks').upsert({
-        session_id: sessionId.current,
-        picks,
-        updated_at: new Date().toISOString(),
-      });
+      supabase.from('picks').upsert({ session_id: sessionId.current, picks, updated_at: new Date().toISOString() });
+      if (currentGroupRef.current) {
+        supabase.from('group_picks').upsert({
+          group_id: currentGroupRef.current.id,
+          session_id: sessionId.current,
+          picks,
+          updated_at: new Date().toISOString(),
+        });
+      }
     }, 600);
   }, [picks]);
 
+  // ── Load group leaderboard data ──
+  const loadGroupData = async (group = currentGroup) => {
+    if (!group) return;
+    const [{ data: mems }, { data: allPicks }] = await Promise.all([
+      supabase.from('group_members').select('*').eq('group_id', group.id).order('joined_at'),
+      supabase.from('group_picks').select('*').eq('group_id', group.id),
+    ]);
+    setGroupMembers(mems || []);
+    const map = {};
+    (allPicks || []).forEach(p => { map[p.session_id] = p.picks; });
+    setGroupPicksMap(map);
+    // Also reload winners
+    const { data: wData } = await supabase.from('winners').select('*');
+    const w = {};
+    (wData || []).forEach(r => { w[r.category_id] = r.winner_name; });
+    setWinners(w);
+  };
+
+  // ── Handlers ──
   const handlePick = (catId, nominee) => {
     setPicks(prev => {
       if (prev[catId]?.name === nominee.name) {
@@ -793,22 +1540,143 @@ function App() {
     });
   };
 
-  if (activeCat) {
-    return (
-      <CategoryPage
-        categoryId={activeCat}
-        picks={picks}
-        onPick={handlePick}
-        onBack={() => setActiveCat(null)}
-      />
-    );
+  const handleCreateGroup = async (groupName, displayName) => {
+    const { data: grp, error } = await supabase
+      .from('groups').insert({ name: groupName, created_by: sessionId.current }).select().single();
+    if (error || !grp) { showToast('Error creating group.'); return; }
+
+    const { data: mem } = await supabase.from('group_members')
+      .insert({ group_id: grp.id, session_id: sessionId.current, display_name: displayName })
+      .select().single();
+
+    await supabase.from('group_picks').upsert({
+      group_id: grp.id, session_id: sessionId.current, picks, updated_at: new Date().toISOString(),
+    });
+
+    setCurrentGroup(grp);
+    setGroupMember(mem);
+    localStorage.setItem('goldticket_group', JSON.stringify(grp));
+    localStorage.setItem('goldticket_member', JSON.stringify(mem));
+
+    const base = window.location.origin + window.location.pathname;
+    const url = `${base}?group=${grp.invite_code}`;
+    setInviteUrl(url);
+    setCreatedGroupName(groupName);
+    setModal('created');
+  };
+
+  const handleJoinGroup = async (displayName) => {
+    if (!pendingGroup) return;
+    const { data: mem } = await supabase.from('group_members')
+      .upsert({ group_id: pendingGroup.id, session_id: sessionId.current, display_name: displayName },
+               { onConflict: 'group_id,session_id' })
+      .select().single();
+
+    await supabase.from('group_picks').upsert({
+      group_id: pendingGroup.id, session_id: sessionId.current, picks, updated_at: new Date().toISOString(),
+    });
+
+    setCurrentGroup(pendingGroup);
+    setGroupMember(mem);
+    localStorage.setItem('goldticket_group', JSON.stringify(pendingGroup));
+    localStorage.setItem('goldticket_member', JSON.stringify(mem));
+    setPendingGroup(null);
+    setModal(null);
+    showToast(`Welcome to ${pendingGroup.name}!`);
+  };
+
+  const handleLeaveGroup = () => {
+    setCurrentGroup(null);
+    setGroupMember(null);
+    setGroupTab('picks');
+    setGroupMembers([]);
+    setGroupPicksMap({});
+    localStorage.removeItem('goldticket_group');
+    localStorage.removeItem('goldticket_member');
+    window.history.replaceState({}, '', window.location.pathname);
+  };
+
+  const handleCopyInvite = async () => {
+    if (!currentGroup) return;
+    const base = window.location.origin + window.location.pathname;
+    const url = `${base}?group=${currentGroup.invite_code}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('🔗 Invite link copied!');
+    } catch { showToast('Could not copy link.'); }
+  };
+
+  const handleSaveWinners = async (localWinners) => {
+    const catIds = CATEGORIES.map(c => c.id);
+    const upserts = catIds
+      .filter(id => localWinners[id])
+      .map(id => ({ category_id: id, winner_name: localWinners[id], set_at: new Date().toISOString() }));
+
+    await supabase.from('winners').delete().in('category_id', catIds);
+    if (upserts.length > 0) await supabase.from('winners').insert(upserts);
+
+    const w = {};
+    upserts.forEach(r => { w[r.category_id] = r.winner_name; });
+    setWinners(w);
+    showToast(`✓ ${upserts.length} winner${upserts.length !== 1 ? 's' : ''} saved`);
+  };
+
+  const handleScrape = async () => {
+    setScraping(true);
+    try {
+      const scraped = await scrapeWikipediaWinners();
+      const count = Object.keys(scraped).length;
+      if (count === 0) {
+        showToast('No winners found on Wikipedia yet.');
+      } else {
+        setWinners(prev => ({ ...prev, ...scraped }));
+        showToast(`Found ${count} winner${count !== 1 ? 's' : ''} from Wikipedia`);
+      }
+    } catch {
+      showToast('Could not fetch Wikipedia. Try again later.');
+    }
+    setScraping(false);
+  };
+
+  const handleTabChange = (tab) => {
+    setGroupTab(tab);
+    setActiveCat(null);
+    if (tab !== 'picks') loadGroupData();
+  };
+
+  const isAdmin = currentGroup && currentGroup.created_by === sessionId.current;
+
+  // ── Render ──
+  let content;
+  if (currentGroup && groupTab === 'leaderboard') {
+    content = <LeaderboardPage members={groupMembers} groupPicksMap={groupPicksMap} winners={winners} sessionId={sessionId.current}/>;
+  } else if (currentGroup && groupTab === 'winners' && isAdmin) {
+    content = <WinnerEntryPage winners={winners} onSave={handleSaveWinners} onScrape={handleScrape} scraping={scraping}/>;
+  } else if (activeCat) {
+    content = <CategoryPage categoryId={activeCat} picks={picks} winners={winners} onPick={handlePick} onBack={() => setActiveCat(null)}/>;
+  } else {
+    content = <HomePage picks={picks} winners={winners} onSelect={setActiveCat}
+      currentGroup={currentGroup} groupMember={groupMember}
+      onCreateGroup={() => setModal('create')} onLeaveGroup={handleLeaveGroup}/>;
   }
 
   return (
-    <HomePage
-      picks={picks}
-      onSelect={setActiveCat}
-    />
+    <>
+      {currentGroup && (
+        <GroupNav group={currentGroup} tab={groupTab} isAdmin={isAdmin}
+          onTabChange={handleTabChange} onInvite={handleCopyInvite}/>
+      )}
+      {content}
+      {modal && (
+        <GroupModal mode={modal}
+          groupName={modal === 'join' ? pendingGroup?.name : createdGroupName}
+          inviteUrl={inviteUrl}
+          onClose={() => setModal(null)}
+          onCreate={handleCreateGroup}
+          onJoin={handleJoinGroup}/>
+      )}
+      <Toast msg={toast}/>
+    </>
   );
 }
 
