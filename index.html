@@ -1473,8 +1473,30 @@ function ShareSheet({ pdfBlob, inviteCode, onClose }) {
     } catch (e) { if (e.name !== 'AbortError') { if (fallbackUrl) window.location.href = fallbackUrl; else download(); } }
   };
 
-  const email   = () => shareViaNative('mailto:?subject=My%202026%20Oscar%20Ballot&body=Check%20out%20my%20Academy%20Awards%20picks%20on%20Culture%20Brackets!%20%F0%9F%8F%86');
-  const message = () => shareViaNative('sms:?body=Check%20out%20my%202026%20Oscar%20Ballot%20on%20Culture%20Brackets!%20%F0%9F%8F%86');
+  const email = () => shareViaNative('mailto:?subject=My%202026%20Oscar%20Ballot&body=Check%20out%20my%20Academy%20Awards%20picks%20on%20Culture%20Brackets!%20%F0%9F%8F%86');
+
+  // Message: always try to attach the PDF via Web Share API first.
+  // sms: URI can't carry files, so only use it as a last resort (no attachment).
+  const message = async () => {
+    const file = getPdfFile();
+    if (navigator.share) {
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'My 2026 Oscar Ballot' });
+        } else {
+          // Share API available but can't attach files — open sms: without attachment
+          window.location.href = 'sms:?body=Check%20out%20my%202026%20Oscar%20Ballot%20on%20Culture%20Brackets!%20%F0%9F%8F%86';
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          window.location.href = 'sms:?body=Check%20out%20my%202026%20Oscar%20Ballot%20on%20Culture%20Brackets!%20%F0%9F%8F%86';
+        }
+      }
+    } else {
+      // Desktop fallback — open default SMS/Messages app without file
+      window.location.href = 'sms:?body=Check%20out%20my%202026%20Oscar%20Ballot%20on%20Culture%20Brackets!%20%F0%9F%8F%86';
+    }
+  };
 
   const [inviteCopied, setInviteCopied] = React.useState(false);
   const copyInvite = async () => {
