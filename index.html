@@ -383,6 +383,40 @@
       border-radius: 4px; padding: 2px 7px;
     }
 
+    /* ── Lock UI ── */
+    .lock-strip {
+      background: #1a1a2e;
+      border: 1px solid #2e2e50;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin: 0 0 14px;
+      font-size: 0.82rem;
+      color: #aaaacc;
+      text-align: center;
+    }
+    .lock-strip.locked {
+      background: #1e1020;
+      border-color: #5a2070;
+      color: #cc88ee;
+    }
+    .lock-banner {
+      background: #1e1020;
+      border: 1px solid #5a2070;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin: 0 0 14px;
+      font-size: 0.85rem;
+      color: #cc88ee;
+      text-align: center;
+    }
+    .nominee-list.picks-locked .nominee-row:not(.winner-row) {
+      opacity: 0.65;
+      cursor: default;
+    }
+    .nominee-row.locked-row:not(.winner-row):not(.selected) {
+      pointer-events: none;
+    }
+
     .radio {
       width: 20px; height: 20px;
       border-radius: 50%;
@@ -1086,6 +1120,21 @@ const CATEGORIES = [
   },
 ];
 
+/* Picks lock at 6 pm CST (UTC-6) on Sunday March 15, 2026 */
+const LOCK_TIME = new Date('2026-03-15T18:00:00-06:00');
+
+function formatCountdown(ms) {
+  if (ms <= 0) return null;
+  const totalSec = Math.floor(ms / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  return `${m}m ${s}s`;
+}
+
 /* proxy Wikipedia Commons URLs through wsrv.nl to avoid hotlinking restrictions */
 const proxyImg = url => {
   if (!url) return '';
@@ -1318,7 +1367,7 @@ function GroupNav({ group, tab, isAdmin, onTabChange, onInvite }) {
 /* ─────────────────────────────────────────────
    HOME PAGE
 ───────────────────────────────────────────── */
-function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks }) {
+function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMember, onCreateGroup, onLeaveGroup, onRestorePicks, isLocked, now }) {
   const total = CATEGORIES.length;
   const done  = Object.keys(picks).length;
   const remaining = total - done;
@@ -1368,6 +1417,17 @@ function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMem
             {groupMember && <span>as <strong>{groupMember.display_name}</strong></span>}
           </div>
           <button className="group-strip-btn" onClick={onLeaveGroup}>Leave</button>
+        </div>
+      )}
+
+      {/* Lock countdown strip */}
+      {isLocked ? (
+        <div className="lock-strip locked">
+          🔒 Picks are locked — Oscar night is here!
+        </div>
+      ) : (
+        <div className="lock-strip">
+          🎬 Picks lock in <strong>{formatCountdown(LOCK_TIME.getTime() - now)}</strong> — Sun Mar 15 at 6 pm CST
         </div>
       )}
 
@@ -1432,7 +1492,7 @@ function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMem
 /* ─────────────────────────────────────────────
    CATEGORY PAGE
 ───────────────────────────────────────────── */
-function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers, groupPicksMap, groupMember }) {
+function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers, groupPicksMap, groupMember, isLocked }) {
   const cat     = CATEGORIES.find(c => c.id === categoryId);
   const current = picks[categoryId];
   const winner  = winners[categoryId];
@@ -1463,7 +1523,13 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers
         </div>
       )}
 
-      <div className="nominee-list">
+      {isLocked && (
+        <div className="lock-banner">
+          🔒 Picks are locked — Oscar night is here!
+        </div>
+      )}
+
+      <div className={`nominee-list${isLocked ? ' picks-locked' : ''}`}>
         {cat.nominees.map(n => {
           const sel      = current?.name === n.name;
           const isWinner = winner === n.name;
@@ -1473,7 +1539,7 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers
           );
           return (
             <div key={n.name}
-              className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}`}
+              className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}${isLocked ? ' locked-row' : ''}`}
               onClick={() => onPick(categoryId, n)}>
               <div className="nominee-avatar">
                 {n.photo
@@ -1631,6 +1697,13 @@ function App() {
   const [createdGroupName, setCreatedGroupName] = useState('');
   const [inviteUrl, setInviteUrl]         = useState('');
 
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const isLocked = now >= LOCK_TIME.getTime();
+
   const sessionId          = useRef(getSessionId());
   const saveTimeout        = useRef(null);
   const groupSaveTimeout   = useRef(null);
@@ -1781,6 +1854,7 @@ function App() {
 
   // ── Handlers ──
   const handlePick = (catId, nominee) => {
+    if (isLocked) { showToast('Picks are locked 🔒'); return; }
     userModifiedPicks.current = true;
     setPicks(prev => {
       if (prev[catId]?.name === nominee.name) {
@@ -1965,13 +2039,14 @@ function App() {
     content = <WinnerEntryPage winners={winners} onSave={handleSaveWinners} onScrape={handleScrape} scraping={scraping}/>;
   } else if (activeCat) {
     content = <CategoryPage categoryId={activeCat} picks={picks} winners={winners} onPick={handlePick} onBack={() => setActiveCat(null)}
-      groupMembers={groupMembers} groupPicksMap={groupPicksMap} groupMember={groupMember}/>;
+      groupMembers={groupMembers} groupPicksMap={groupPicksMap} groupMember={groupMember} isLocked={isLocked}/>;
   } else {
     content = <HomePage picks={picks} winners={winners} onSelect={setActiveCat}
       onClearAll={() => setPicks({})}
       currentGroup={currentGroup} groupMember={groupMember}
       onCreateGroup={() => setModal('create')} onLeaveGroup={handleLeaveGroup}
-      onRestorePicks={() => setModal('entercode')}/>;
+      onRestorePicks={() => setModal('entercode')}
+      isLocked={isLocked} now={now}/>;
   }
 
   return (
