@@ -1236,7 +1236,7 @@ function HomePage({ picks, winners, onSelect, currentGroup, groupMember, onCreat
     <div className="home">
       <div className="badge"><TrophyIcon color="#D4A843"/> 98TH ACADEMY AWARDS</div>
       <h1>Oscar<br/>Predictions</h1>
-      <p className="subtitle">Make your picks across {total} categories and see how you stack up on Hollywood's biggest night.</p>
+      <p className="subtitle">Pick as many categories as you like and see how you stack up on Hollywood's biggest night.</p>
 
       {/* Group strip */}
       {!currentGroup ? (
@@ -1259,7 +1259,7 @@ function HomePage({ picks, winners, onSelect, currentGroup, groupMember, onCreat
       <div className="progress-card">
         <ProgressRing value={done} total={total}/>
         <span className="remain muted">
-          {remaining === 0 ? '🎉 All picks made!' : `${remaining} ${remaining === 1 ? 'category' : 'categories'} remaining`}
+          {done === 0 ? 'No picks yet' : done === total ? '🎉 All categories picked!' : `${done} of ${total} categories picked`}
         </span>
       </div>
 
