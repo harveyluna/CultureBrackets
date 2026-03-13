@@ -375,6 +375,13 @@
     .nominee-detail { font-size: 0.8rem; color: #666; margin-top: 2px; }
     .nominee-row.selected .nominee-name { color: #f0e8d5; }
     .winner-label { font-size: 0.72rem; color: #5fb870; font-weight: 700; margin-top: 3px; }
+    .friend-picks { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .friend-tag {
+      font-size: 0.68rem; font-weight: 500;
+      background: #1e1e2e; color: #9090cc;
+      border: 1px solid #2e2e50;
+      border-radius: 4px; padding: 2px 7px;
+    }
 
     .radio {
       width: 20px; height: 20px;
@@ -1421,7 +1428,7 @@ function HomePage({ picks, winners, onSelect, onClearAll, currentGroup, groupMem
 /* ─────────────────────────────────────────────
    CATEGORY PAGE
 ───────────────────────────────────────────── */
-function CategoryPage({ categoryId, picks, winners, onPick, onBack }) {
+function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers, groupPicksMap, groupMember }) {
   const cat     = CATEGORIES.find(c => c.id === categoryId);
   const current = picks[categoryId];
   const winner  = winners[categoryId];
@@ -1456,6 +1463,10 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack }) {
         {cat.nominees.map(n => {
           const sel      = current?.name === n.name;
           const isWinner = winner === n.name;
+          const friendPickers = (groupMembers || []).filter(m =>
+            m.id !== groupMember?.id &&
+            groupPicksMap?.[m.id]?.[categoryId]?.name === n.name
+          );
           return (
             <div key={n.name}
               className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}`}
@@ -1471,6 +1482,11 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack }) {
                 <div className="nominee-name">{n.name}</div>
                 {n.detail && <div className="nominee-detail">{n.detail}</div>}
                 {isWinner && <div className="winner-label">🏆 Winner</div>}
+                {friendPickers.length > 0 && (
+                  <div className="friend-picks">
+                    {friendPickers.map(m => <span key={m.id} className="friend-tag">{m.display_name}</span>)}
+                  </div>
+                )}
               </div>
               <div className="radio">
                 {(sel || isWinner) && <div className="radio-dot"/>}
@@ -1933,7 +1949,8 @@ function App() {
   } else if (currentGroup && groupTab === 'winners' && isAdmin) {
     content = <WinnerEntryPage winners={winners} onSave={handleSaveWinners} onScrape={handleScrape} scraping={scraping}/>;
   } else if (activeCat) {
-    content = <CategoryPage categoryId={activeCat} picks={picks} winners={winners} onPick={handlePick} onBack={() => setActiveCat(null)}/>;
+    content = <CategoryPage categoryId={activeCat} picks={picks} winners={winners} onPick={handlePick} onBack={() => setActiveCat(null)}
+      groupMembers={groupMembers} groupPicksMap={groupPicksMap} groupMember={groupMember}/>;
   } else {
     content = <HomePage picks={picks} winners={winners} onSelect={setActiveCat}
       onClearAll={() => setPicks({})}
