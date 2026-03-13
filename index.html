@@ -703,6 +703,51 @@ const supabase = window.supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzaWhlc2dhbGtneXJicXlzcnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyODI0MTAsImV4cCI6MjA4ODg1ODQxMH0.VAJhU4WgBYJS-5Jz_81QcH_FU_LPKyCnyxWIUBTcxqY'
 );
 
+// ── Supabase helpers ──────────────────────────────────────────────────────────
+// These avoid relying on unique constraints (upsert + onConflict requires a DB
+// constraint; without it, every upsert inserts a new row, making reads fail).
+
+async function saveGroupPicks(groupId, sid, picksData) {
+  // Try update first; if nothing matched, insert.
+  const { data: updated } = await supabase.from('group_picks')
+    .update({ picks: picksData, updated_at: new Date().toISOString() })
+    .eq('group_id', groupId).eq('session_id', sid)
+    .select('group_id');
+  if (!updated || updated.length === 0) {
+    await supabase.from('group_picks')
+      .insert({ group_id: groupId, session_id: sid, picks: picksData, updated_at: new Date().toISOString() });
+  }
+}
+
+async function saveGlobalPicks(sid, picksData) {
+  const { data: updated } = await supabase.from('picks')
+    .update({ picks: picksData, updated_at: new Date().toISOString() })
+    .eq('session_id', sid)
+    .select('session_id');
+  if (!updated || updated.length === 0) {
+    await supabase.from('picks')
+      .insert({ session_id: sid, picks: picksData, updated_at: new Date().toISOString() });
+  }
+}
+
+// Safe read: returns the most recent picks regardless of duplicate rows.
+async function fetchGroupPicks(groupId, sid) {
+  const { data } = await supabase.from('group_picks')
+    .select('picks').eq('group_id', groupId).eq('session_id', sid)
+    .order('updated_at', { ascending: false }).limit(1);
+  const p = data?.[0]?.picks;
+  return p && Object.keys(p).length > 0 ? p : null;
+}
+
+async function fetchGlobalPicks(sid) {
+  const { data } = await supabase.from('picks')
+    .select('picks').eq('session_id', sid)
+    .order('updated_at', { ascending: false }).limit(1);
+  const p = data?.[0]?.picks;
+  return p && Object.keys(p).length > 0 ? p : null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function getSessionId() {
   let id = localStorage.getItem('goldticket_session');
   if (!id) {
@@ -1616,14 +1661,12 @@ function App() {
               localStorage.setItem('goldticket_group', JSON.stringify(grp));
               localStorage.setItem('goldticket_member', JSON.stringify(mem));
               // Always refresh picks from group_picks to get latest across all devices
-              supabase.from('group_picks').select('picks')
-                .eq('group_id', grp.id).eq('session_id', sessionId.current).maybeSingle()
-                .then(({ data: gp }) => {
-                  if (gp?.picks && Object.keys(gp.picks).length > 0) {
-                    setPicks(gp.picks);
-                    localStorage.setItem('goldticket_picks', JSON.stringify(gp.picks));
-                  }
-                });
+              fetchGroupPicks(grp.id, sessionId.current).then(gp => {
+                if (gp) {
+                  setPicks(gp);
+                  localStorage.setItem('goldticket_picks', JSON.stringify(gp));
+                }
+              });
             } else {
               setPendingGroup(grp);
               supabase.from('group_members').select('display_name').eq('group_id', grp.id).order('joined_at')
@@ -1647,19 +1690,16 @@ function App() {
     };
 
     const loadFromGlobal = () =>
-      supabase.from('picks').select('picks').eq('session_id', sessionId.current).maybeSingle()
-        .then(({ data }) => applyIfUnmodified(data?.picks));
+      fetchGlobalPicks(sessionId.current).then(p => applyIfUnmodified(p));
 
     if (currentGroup) {
-      supabase.from('group_picks').select('picks')
-        .eq('group_id', currentGroup.id).eq('session_id', sessionId.current).maybeSingle()
-        .then(({ data: gp }) => {
-          if (gp?.picks && Object.keys(gp.picks).length > 0) {
-            applyIfUnmodified(gp.picks);
-          } else {
-            loadFromGlobal();
-          }
-        });
+      fetchGroupPicks(currentGroup.id, sessionId.current).then(gp => {
+        if (gp) {
+          applyIfUnmodified(gp);
+        } else {
+          loadFromGlobal();
+        }
+      });
     } else {
       loadFromGlobal();
     }
@@ -1678,19 +1718,9 @@ function App() {
   // Uses picksRef so the callback always reads the latest picks without stale closure.
   useEffect(() => {
     const handleHide = () => {
-      if (!currentGroupRef.current) return;
       const latest = picksRef.current;
-      supabase.from('group_picks').upsert({
-        group_id: currentGroupRef.current.id,
-        session_id: sessionId.current,
-        picks: latest,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'group_id,session_id' });
-      supabase.from('picks').upsert({
-        session_id: sessionId.current,
-        picks: latest,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'session_id' });
+      if (currentGroupRef.current) saveGroupPicks(currentGroupRef.current.id, sessionId.current, latest);
+      saveGlobalPicks(sessionId.current, latest);
     };
     document.addEventListener('visibilitychange', handleHide);
     return () => document.removeEventListener('visibilitychange', handleHide);
@@ -1703,23 +1733,13 @@ function App() {
     // Save to group_picks quickly so returning users always get latest
     clearTimeout(groupSaveTimeout.current);
     groupSaveTimeout.current = setTimeout(() => {
-      if (currentGroupRef.current) {
-        supabase.from('group_picks').upsert({
-          group_id: currentGroupRef.current.id,
-          session_id: sessionId.current,
-          picks,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'group_id,session_id' });
-      }
+      if (currentGroupRef.current) saveGroupPicks(currentGroupRef.current.id, sessionId.current, picks);
     }, 200);
 
     // Save to global picks table (longer debounce, less critical)
     clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
-      supabase.from('picks').upsert(
-        { session_id: sessionId.current, picks, updated_at: new Date().toISOString() },
-        { onConflict: 'session_id' }
-      );
+      saveGlobalPicks(sessionId.current, picks);
     }, 600);
   }, [picks]);
 
@@ -1762,9 +1782,7 @@ function App() {
       .insert({ group_id: grp.id, session_id: sessionId.current, display_name: displayName })
       .select().single();
 
-    await supabase.from('group_picks').upsert({
-      group_id: grp.id, session_id: sessionId.current, picks, updated_at: new Date().toISOString(),
-    });
+    await saveGroupPicks(grp.id, sessionId.current, picks);
 
     setCurrentGroup(grp);
     setGroupMember(mem);
@@ -1790,13 +1808,8 @@ function App() {
 
     let mem;
     if (existing) {
-      // Returning user — always load their stored picks
-      const { data: gp } = await supabase.from('group_picks')
-        .select('picks')
-        .eq('group_id', pendingGroup.id)
-        .eq('session_id', existing.session_id)
-        .maybeSingle();
-      const restoredPicks = gp?.picks && Object.keys(gp.picks).length > 0 ? gp.picks : null;
+      // Returning user — load their most recent stored picks (safe even with duplicate rows)
+      const restoredPicks = await fetchGroupPicks(pendingGroup.id, existing.session_id);
 
       if (existing.session_id !== sessionId.current) {
         // Different device/session — re-point member row and migrate picks
@@ -1806,23 +1819,15 @@ function App() {
           .select().single();
         mem = updatedMem || { ...existing, session_id: sessionId.current };
 
+        // Delete ALL old rows for the previous session then write one clean row
         await supabase.from('group_picks')
           .delete()
           .eq('group_id', pendingGroup.id)
           .eq('session_id', existing.session_id);
-        await supabase.from('group_picks').upsert({
-          group_id: pendingGroup.id, session_id: sessionId.current,
-          picks: restoredPicks || picks, updated_at: new Date().toISOString(),
-        });
+        await saveGroupPicks(pendingGroup.id, sessionId.current, restoredPicks || picks);
       } else {
-        // Same session — member row is unchanged; just ensure picks are written
         mem = existing;
-        if (!restoredPicks) {
-          await supabase.from('group_picks').upsert({
-            group_id: pendingGroup.id, session_id: sessionId.current,
-            picks, updated_at: new Date().toISOString(),
-          });
-        }
+        if (!restoredPicks) await saveGroupPicks(pendingGroup.id, sessionId.current, picks);
       }
 
       if (restoredPicks) {
@@ -1835,14 +1840,10 @@ function App() {
     } else {
       // New member
       const { data: newMem } = await supabase.from('group_members')
-        .upsert({ group_id: pendingGroup.id, session_id: sessionId.current, display_name: displayName },
-                 { onConflict: 'group_id,session_id' })
+        .insert({ group_id: pendingGroup.id, session_id: sessionId.current, display_name: displayName })
         .select().single();
       mem = newMem;
-      await supabase.from('group_picks').upsert({
-        group_id: pendingGroup.id, session_id: sessionId.current,
-        picks, updated_at: new Date().toISOString(),
-      });
+      await saveGroupPicks(pendingGroup.id, sessionId.current, picks);
       showToast(`Welcome to ${pendingGroup.name}!`);
     }
 
@@ -1931,27 +1932,14 @@ function App() {
 
   // ── Explicit save — called by the Save button ──
   const handleSavePicks = async () => {
-    const saves = [
-      supabase.from('picks').upsert(
-        { session_id: sessionId.current, picks, updated_at: new Date().toISOString() },
-        { onConflict: 'session_id' }
-      ),
-    ];
-    if (currentGroup) {
-      saves.push(
-        supabase.from('group_picks').upsert(
-          { group_id: currentGroup.id, session_id: sessionId.current, picks, updated_at: new Date().toISOString() },
-          { onConflict: 'group_id,session_id' }
-        )
-      );
-    }
-    const results = await Promise.all(saves);
-    const anyError = results.some(r => r.error);
-    if (anyError) {
+    try {
+      await saveGlobalPicks(sessionId.current, picks);
+      if (currentGroup) await saveGroupPicks(currentGroup.id, sessionId.current, picks);
+      return true;
+    } catch {
       showToast('⚠️ Could not save. Check your connection and try again.');
       return false;
     }
-    return true;
   };
 
   const isAdmin = currentGroup && currentGroup.created_by === sessionId.current;
