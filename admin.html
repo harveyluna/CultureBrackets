@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — CultureBrackets</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #111; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    /* ── Login ── */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .login-box {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px;
+      padding: 40px 36px; width: 100%; max-width: 360px; text-align: center;
+    }
+    .login-box h1 { font-size: 1.3rem; font-weight: 600; margin-bottom: 6px; color: #f0e8d5; }
+    .login-box p  { font-size: 0.85rem; color: #666; margin-bottom: 28px; }
+    .login-box input {
+      width: 100%; padding: 11px 14px; background: #222; border: 1px solid #333;
+      border-radius: 8px; color: #e5e5e5; font-size: 1rem; font-family: inherit;
+      margin-bottom: 12px; outline: none;
+    }
+    .login-box input:focus { border-color: #D4A843; }
+    .login-box button {
+      width: 100%; padding: 11px; background: #1e1c14; border: 1px solid #3a3020;
+      border-radius: 8px; color: #D4A843; font-size: 0.95rem; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background 0.15s;
+    }
+    .login-box button:hover { background: #2a2518; }
+    .login-error { color: #e05555; font-size: 0.82rem; margin-top: 10px; }
+
+    /* ── Admin layout ── */
+    #admin-content { display: none; max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    header.admin-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #222;
+    }
+    .admin-header h1 { font-size: 1.4rem; font-weight: 700; color: #f0e8d5; }
+    .admin-header .subtitle { font-size: 0.82rem; color: #666; margin-top: 3px; }
+    .admin-header .refresh-btn {
+      background: none; border: 1px solid #333; color: #aaa; padding: 7px 14px;
+      border-radius: 8px; font-size: 0.82rem; font-family: inherit; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .admin-header .refresh-btn:hover { border-color: #666; color: #e5e5e5; }
+
+    /* ── Stats ── */
+    .stats-row { display: flex; gap: 12px; margin-bottom: 36px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 140px; background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 12px; padding: 18px 20px;
+    }
+    .stat-card .stat-num { font-size: 2rem; font-weight: 700; color: #D4A843; line-height: 1; }
+    .stat-card .stat-label { font-size: 0.78rem; color: #666; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Section headers ── */
+    .section-title {
+      font-size: 1.05rem; font-weight: 700; color: #f0e8d5;
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #222;
+    }
+
+    /* ── Groups ── */
+    #groups-section { margin-bottom: 48px; }
+    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .group-card {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .group-card-name { font-size: 0.95rem; font-weight: 600; color: #f0e8d5; margin-bottom: 4px; }
+    .group-card-code { font-size: 0.75rem; color: #555; margin-bottom: 12px; font-family: monospace; }
+    .member-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .member-pill {
+      background: #222; border: 1px solid #2f2f2f; border-radius: 999px;
+      padding: 3px 10px; font-size: 0.78rem; color: #bbb;
+    }
+    .no-members { font-size: 0.8rem; color: #444; font-style: italic; }
+
+    /* ── Charts ── */
+    #charts-section {}
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+    .chart-card {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px;
+      padding: 20px 20px 16px;
+    }
+    .chart-card-title { font-size: 0.85rem; font-weight: 600; color: #D4A843; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .chart-card canvas { width: 100% !important; }
+
+    /* ── Loading / empty ── */
+    .loading { color: #555; font-size: 0.88rem; padding: 20px 0; }
+    .empty { color: #444; font-size: 0.85rem; font-style: italic; padding: 20px 0; }
+  </style>
+</head>
+<body>
+
+<!-- ── Login ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>CultureBrackets</h1>
+    <p>Admin access only</p>
+    <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password" />
+    <button onclick="tryLogin()">Enter</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── Admin ── -->
+<div id="admin-content">
+  <header class="admin-header">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <div class="subtitle">98th Academy Awards · CultureBrackets</div>
+    </div>
+    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </header>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="stat-groups">—</div><div class="stat-label">Groups</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-members">—</div><div class="stat-label">Members</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-picks">—</div><div class="stat-label">Ballots submitted</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-complete">—</div><div class="stat-label">Complete ballots</div></div>
+  </div>
+
+  <section id="groups-section">
+    <div class="section-title">Groups &amp; Members</div>
+    <div id="groups-list" class="loading">Loading…</div>
+  </section>
+
+  <section id="charts-section">
+    <div class="section-title">Most Popular Picks (all ballots)</div>
+    <div id="charts-grid" class="loading">Loading…</div>
+  </section>
+</div>
+
+<script>
+// ── Auth ─────────────────────────────────────────────────────────────────────
+const ADMIN_PASSWORD = 'oscars2026';
+
+function tryLogin() {
+  const val = document.getElementById('pw-input').value;
+  if (val === ADMIN_PASSWORD) {
+    sessionStorage.setItem('cb_admin', '1');
+    showAdmin();
+  } else {
+    document.getElementById('login-error').textContent = 'Incorrect password.';
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+function showAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-content').style.display = 'block';
+  loadAll();
+}
+
+if (sessionStorage.getItem('cb_admin') === '1') showAdmin();
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
+const sb = window.supabase.createClient(
+  'https://ysihesgalkgyrbqysrtp.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzaWhlc2dhbGtneXJicXlzcnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyODI0MTAsImV4cCI6MjA4ODg1ODQxMH0.VAJhU4WgBYJS-5Jz_81QcH_FU_LPKyCnyxWIUBTcxqY'
+);
+
+// ── Categories ────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: 'best_picture', name: 'Best Picture', nominees: ['Bugonia','F1','Frankenstein','Hamnet','Marty Supreme','One Battle After Another','The Secret Agent','Sentimental Value','Sinners','Train Dreams'] },
+  { id: 'best_director', name: 'Best Director', nominees: ['Chloé Zhao','Josh Safdie','Paul Thomas Anderson','Joachim Trier','Ryan Coogler'] },
+  { id: 'best_actor', name: 'Best Actor', nominees: ['Timothée Chalamet','Leonardo DiCaprio','Ethan Hawke','Michael B. Jordan','Wagner Moura'] },
+  { id: 'best_actress', name: 'Best Actress', nominees: ['Jessie Buckley','Rose Byrne','Kate Hudson','Renate Reinsve','Emma Stone'] },
+  { id: 'best_supporting_actor', name: 'Best Supporting Actor', nominees: ['Jacob Elordi','Sean Penn','Benicio Del Toro','Stellan Skarsgård','Delroy Lindo'] },
+  { id: 'best_supporting_actress', name: 'Best Supporting Actress', nominees: ['Elle Fanning','Inga Ibsdotter Lilleaas','Amy Madigan','Wunmi Mosaku','Teyana Taylor'] },
+  { id: 'best_adapted_screenplay', name: 'Best Adapted Screenplay', nominees: ['Bugonia','Frankenstein','Hamnet','One Battle After Another','Train Dreams'] },
+  { id: 'best_original_screenplay', name: 'Best Original Screenplay', nominees: ['Sinners','Marty Supreme','It Was Just an Accident','Sentimental Value','Blue Moon'] },
+  { id: 'best_animated_feature', name: 'Best Animated Feature', nominees: ['Arco','Elio','KPop Demon Hunters','Little Amélie or the Character of Rain','Zootopia 2'] },
+  { id: 'best_international_feature', name: 'Best International Feature Film', nominees: ['It Was Just an Accident','The Secret Agent','Sentimental Value','Sirāt','The Voice of Hind Rajab'] },
+  { id: 'best_cinematography', name: 'Best Cinematography', nominees: ['Frankenstein','Marty Supreme','One Battle After Another','Sinners','Train Dreams'] },
+  { id: 'best_film_editing', name: 'Best Film Editing', nominees: ['F1','Marty Supreme','One Battle After Another','Sentimental Value','Sinners'] },
+  { id: 'best_original_score', name: 'Best Original Score', nominees: ['Frankenstein','Bugonia','One Battle After Another','Sinners','Hamnet'] },
+  { id: 'best_original_song', name: 'Best Original Song', nominees: ['"Golden"','"I Lied to You"','"Dear Me"','"Sweet Dreams of Joy"','"Train Dreams"'] },
+  { id: 'best_production_design', name: 'Best Production Design', nominees: ['Frankenstein','Hamnet','Marty Supreme','One Battle After Another','Sinners'] },
+  { id: 'best_costume_design', name: 'Best Costume Design', nominees: ['Avatar: Fire and Ash','Frankenstein','Hamnet','Marty Supreme','Sinners'] },
+  { id: 'best_makeup_hairstyling', name: 'Best Makeup and Hairstyling', nominees: ['Frankenstein','Kokuho','Sinners','The Smashing Machine','The Ugly Stepsister'] },
+  { id: 'best_sound', name: 'Best Sound', nominees: ['F1','Frankenstein','One Battle After Another','Sinners','Sirāt'] },
+  { id: 'best_visual_effects', name: 'Best Visual Effects', nominees: ['Avatar: Fire and Ash','F1','Jurassic World Rebirth','The Lost Bus','Sinners'] },
+  { id: 'best_documentary_feature', name: 'Best Documentary Feature Film', nominees: ['The Alabama Solution','Come See Me in the Good Light','Cutting Through Rocks','Mr. Nobody Against Putin','The Perfect Neighbor'] },
+  { id: 'best_casting', name: 'Best Casting', nominees: ['Hamnet','Marty Supreme','One Battle After Another','The Secret Agent','Sinners'] },
+];
+
+// ── Load all data ─────────────────────────────────────────────────────────────
+let chartInstances = {};
+
+async function loadAll() {
+  const [groupsRes, membersRes, picksRes] = await Promise.all([
+    sb.from('groups').select('*').order('created_at', { ascending: false }),
+    sb.from('group_members').select('*'),
+    sb.from('picks').select('picks'),
+  ]);
+
+  const groups  = groupsRes.data  || [];
+  const members = membersRes.data || [];
+  const picks   = picksRes.data   || [];
+
+  renderStats(groups, members, picks);
+  renderGroups(groups, members);
+  renderCharts(picks);
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function renderStats(groups, members, picks) {
+  document.getElementById('stat-groups').textContent  = groups.length;
+  document.getElementById('stat-members').textContent = members.length;
+  document.getElementById('stat-picks').textContent   = picks.length;
+  const complete = picks.filter(r => r.picks && Object.keys(r.picks).length === CATEGORIES.length).length;
+  document.getElementById('stat-complete').textContent = complete;
+}
+
+// ── Groups ────────────────────────────────────────────────────────────────────
+function renderGroups(groups, members) {
+  const el = document.getElementById('groups-list');
+  if (!groups.length) { el.className = 'empty'; el.textContent = 'No groups yet.'; return; }
+
+  el.className = 'groups-grid';
+  el.innerHTML = groups.map(g => {
+    const gMembers = members.filter(m => m.group_id === g.id);
+    const pills = gMembers.length
+      ? gMembers.map(m => `<span class="member-pill">${esc(m.display_name)}</span>`).join('')
+      : '<span class="no-members">No members</span>';
+    return `
+      <div class="group-card">
+        <div class="group-card-name">${esc(g.name)}</div>
+        <div class="group-card-code">Code: ${esc(g.invite_code)} · ${gMembers.length} member${gMembers.length !== 1 ? 's' : ''}</div>
+        <div class="member-list">${pills}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+function renderCharts(picksRows) {
+  // Aggregate: { catId: { nomineeName: count } }
+  const tally = {};
+  CATEGORIES.forEach(c => { tally[c.id] = {}; c.nominees.forEach(n => { tally[c.id][n] = 0; }); });
+
+  picksRows.forEach(row => {
+    if (!row.picks) return;
+    Object.entries(row.picks).forEach(([catId, pick]) => {
+      if (!tally[catId] || !pick?.name) return;
+      tally[catId][pick.name] = (tally[catId][pick.name] || 0) + 1;
+    });
+  });
+
+  const grid = document.getElementById('charts-grid');
+  grid.className = 'charts-grid';
+  grid.innerHTML = '';
+
+  // Destroy old chart instances to prevent memory leaks
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
+
+  const GOLD   = '#D4A843';
+  const DIMMED = '#3a3020';
+
+  CATEGORIES.forEach(cat => {
+    const counts = cat.nominees.map(n => tally[cat.id][n] || 0);
+    const max    = Math.max(...counts, 1);
+    const colors = counts.map(v => v === max && v > 0 ? GOLD : DIMMED);
+
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.innerHTML = `<div class="chart-card-title">${cat.name}</div><canvas id="chart-${cat.id}"></canvas>`;
+    grid.appendChild(card);
+
+    const total = counts.reduce((a, b) => a + b, 0);
+    const labels = cat.nominees.map(n => {
+      const count = tally[cat.id][n] || 0;
+      const pct   = total > 0 ? Math.round(count / total * 100) : 0;
+      return `${n}  (${count}${total > 0 ? ' · ' + pct + '%' : ''})`;
+    });
+
+    const ctx = document.getElementById(`chart-${cat.id}`).getContext('2d');
+    chartInstances[cat.id] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ data: counts, backgroundColor: colors, borderRadius: 4, borderSkipped: false }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: {
+          label: ctx => ` ${ctx.raw} vote${ctx.raw !== 1 ? 's' : ''}`,
+        }}},
+        scales: {
+          x: { grid: { color: '#1f1f1f' }, ticks: { color: '#555', stepSize: 1 }, border: { color: '#1f1f1f' } },
+          y: { grid: { display: false }, ticks: { color: '#aaa', font: { size: 12 } } },
+        },
+      },
+    });
+  });
+}
+
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
