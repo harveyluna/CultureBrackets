@@ -1809,13 +1809,8 @@ function HomePage({ picks, winners, onPick, onClearAll, onExport, currentGroup, 
                 {current?.name === winner ? ' — Great pick!' : current ? ' — Better luck next time!' : ''}
               </div>
             )}
-            {isLocked && (
-              <div className="lock-banner">
-                🔒 Picks are locked — Oscar night is here!
-              </div>
-            )}
 
-            <div className={`nominee-list${isLocked ? ' picks-locked' : ''}`}>
+            <div className={`nominee-list${winner ? ' picks-locked' : ''}`}>
               {cat.nominees.map(n => {
                 const sel      = current?.name === n.name;
                 const isWinner = winner === n.name;
@@ -1825,7 +1820,7 @@ function HomePage({ picks, winners, onPick, onClearAll, onExport, currentGroup, 
                 );
                 return (
                   <div key={n.name}
-                    className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}${isLocked ? ' locked-row' : ''}`}
+                    className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}${winner ? ' locked-row' : ''}`}
                     onClick={() => onPick(cat.id, n)}>
                     <div className="nominee-avatar">
                       {n.photo
@@ -1885,13 +1880,7 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers
         </div>
       )}
 
-      {isLocked && (
-        <div className="lock-banner">
-          🔒 Picks are locked — Oscar night is here!
-        </div>
-      )}
-
-      <div className={`nominee-list${isLocked ? ' picks-locked' : ''}`}>
+      <div className={`nominee-list${winner ? ' picks-locked' : ''}`}>
         {cat.nominees.map(n => {
           const sel      = current?.name === n.name;
           const isWinner = winner === n.name;
@@ -1901,7 +1890,7 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers
           );
           return (
             <div key={n.name}
-              className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}${isLocked ? ' locked-row' : ''}`}
+              className={`nominee-row${isWinner ? ' winner-row' : sel ? ' selected' : ''}${winner ? ' locked-row' : ''}`}
               onClick={() => onPick(categoryId, n)}>
               <div className="nominee-avatar">
                 {n.photo
@@ -2307,7 +2296,7 @@ function App() {
 
   // ── Handlers ──
   const handlePick = (catId, nominee) => {
-    if (isLocked) { showToast('Picks are locked 🔒'); return; }
+    if (winners[catId]) { showToast('Winner already announced — this category is locked 🏆'); return; }
     userModifiedPicks.current = true;
     setPicks(prev => {
       if (prev[catId]?.name === nominee.name) {
