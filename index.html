@@ -276,6 +276,18 @@
     .export-pdf-btn { background: none; border: none; color: #9a7a30; cursor: pointer; padding: 6px; border-radius: 6px; font-family: inherit; transition: all 0.15s; margin-top: 8px; display: flex; align-items: center; justify-content: center; }
     .export-pdf-btn:hover { color: #D4A843; background: #1e1c14; }
 
+    /* ── My Groups modal ── */
+    .my-groups-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 320px; overflow-y: auto; }
+    .my-group-item { display: flex; align-items: center; justify-content: space-between; background: #1a1810; border: 1px solid #3a3020; border-radius: 10px; padding: 12px 14px; gap: 12px; }
+    .my-group-item-info { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+    .my-group-item-name { font-weight: 600; color: #f0e8d5; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .my-group-item-as { font-size: 0.8rem; color: #777; }
+    .my-group-rejoin-btn { background: #D4A843; border: none; color: #111; font-weight: 600; font-size: 0.82rem; padding: 7px 14px; border-radius: 7px; cursor: pointer; font-family: inherit; flex-shrink: 0; transition: background 0.15s; }
+    .my-group-rejoin-btn:hover { background: #c49530; }
+    .my-group-rejoin-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+    .my-groups-alt-link { background: none; border: none; color: #555; font-size: 0.82rem; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; font-family: inherit; padding: 2px 0; transition: color 0.15s; }
+    .my-groups-alt-link:hover { color: #aaa; }
+
     /* ── Scroll to top ── */
     .scroll-top-btn {
       position: fixed;
@@ -1387,9 +1399,31 @@ function Toast({ msg }) {
 }
 
 /* ─────────────────────────────────────────────
+   MY GROUP ITEM (used inside mygroups modal)
+───────────────────────────────────────────── */
+function MyGroupItem({ group, member, onRejoin }) {
+  const [loading, setLoading] = React.useState(false);
+  return (
+    <div className="my-group-item">
+      <div className="my-group-item-info">
+        <span className="my-group-item-name">{group.name}</span>
+        <span className="my-group-item-as">as {member.display_name}</span>
+      </div>
+      <button className="my-group-rejoin-btn" disabled={loading}
+        onClick={async () => {
+          setLoading(true);
+          try { await onRejoin(group, member); } finally { setLoading(false); }
+        }}>
+        {loading ? '…' : 'Rejoin'}
+      </button>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    GROUP MODAL
 ───────────────────────────────────────────── */
-function GroupModal({ mode, groupName, inviteUrl, existingMembers = [], onClose, onCreate, onJoin, defaultCode = '' }) {
+function GroupModal({ mode, groupName, inviteUrl, existingMembers = [], onClose, onCreate, onJoin, onRejoin, onEnterCode, myGroups = [], defaultCode = '' }) {
   const [name, setName] = useState('');
   const [displayName, setDisplayName] = useState(mode === 'entercode' ? defaultCode : '');
   const [copied, setCopied] = useState(false);
@@ -1510,6 +1544,26 @@ function GroupModal({ mode, groupName, inviteUrl, existingMembers = [], onClose,
           {loading ? 'Looking up…' : 'Continue'}
         </button>
         <button className="modal-cancel" onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+
+  if (mode === 'mygroups') return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <h2>Your Groups</h2>
+        <p style={{color:'#aaa',fontSize:'0.9rem',marginBottom:'16px'}}>
+          Groups you've joined from this device. Select one to rejoin.
+        </p>
+        <div className="my-groups-list">
+          {myGroups.map(({ group, member }) => (
+            <MyGroupItem key={group.id} group={group} member={member} onRejoin={onRejoin}/>
+          ))}
+        </div>
+        <button className="my-groups-alt-link" onClick={onEnterCode}>
+          Use a different group code
+        </button>
+        <button className="modal-cancel" style={{marginTop:'12px'}} onClick={onClose}>Cancel</button>
       </div>
     </div>
   );
@@ -2058,6 +2112,7 @@ function App() {
   const [createdGroupName, setCreatedGroupName] = useState('');
   const [inviteUrl, setInviteUrl]         = useState('');
   const [shareBlob, setShareBlob]         = useState(null);
+  const [myGroups, setMyGroups]           = useState([]);
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -2346,6 +2401,52 @@ function App() {
     window.history.replaceState({}, '', window.location.pathname);
   };
 
+  // Show the user's existing groups (from this device's session) or fall back to enter-code
+  const handleShowMyGroups = async () => {
+    const { data: rows } = await supabase
+      .from('group_members')
+      .select('*, groups(*)')
+      .eq('session_id', sessionId.current);
+
+    const found = (rows || [])
+      .filter(r => r.groups)
+      .map(r => ({
+        group: r.groups,
+        member: { id: r.id, group_id: r.group_id, session_id: r.session_id, display_name: r.display_name, joined_at: r.joined_at },
+      }));
+
+    if (found.length > 0) {
+      setMyGroups(found);
+      setModal('mygroups');
+    } else {
+      setModal('entercode');
+    }
+  };
+
+  // Directly rejoin a group the user already belongs to (no pendingGroup involvement)
+  const handleRejoinGroup = async (group, member) => {
+    // Load only this group/member's picks — never mix with another group's data
+    const restoredPicks = await fetchGroupPicks(group.id, member.id);
+
+    // Set group state cleanly
+    setCurrentGroup(group);
+    setGroupMember(member);
+    localStorage.setItem('goldticket_group', JSON.stringify(group));
+    localStorage.setItem('goldticket_member', JSON.stringify(member));
+
+    if (restoredPicks && Object.keys(restoredPicks).length > 0) {
+      setPicks(restoredPicks);
+      localStorage.setItem('goldticket_picks', JSON.stringify(restoredPicks));
+      showToast(`Welcome back, ${member.display_name}! Your picks have been restored.`);
+    } else {
+      showToast(`Rejoined ${group.name}!`);
+    }
+
+    // Clear mygroups state and close modal
+    setMyGroups([]);
+    setModal(null);
+  };
+
   // Called from the 'entercode' modal — look up the group then flip to the 'join' modal
   const handleEnterCode = async (raw) => {
     // Accept either a bare code or the full invite URL
@@ -2629,7 +2730,7 @@ function App() {
       onClearAll={() => setPicks({})} onExport={handleShare}
       currentGroup={currentGroup} groupMember={groupMember}
       onCreateGroup={() => setModal('create')} onLeaveGroup={handleLeaveGroup}
-      onRestorePicks={() => setModal('entercode')}
+      onRestorePicks={handleShowMyGroups}
       isLocked={isLocked} now={now}
       groupMembers={groupMembers} groupPicksMap={groupPicksMap}/>;
   }
@@ -2646,9 +2747,12 @@ function App() {
           groupName={modal === 'join' ? pendingGroup?.name : createdGroupName}
           inviteUrl={inviteUrl}
           existingMembers={pendingGroupMembers}
-          onClose={() => setModal(null)}
+          onClose={() => { setMyGroups([]); setModal(null); }}
           onCreate={modal === 'entercode' ? handleEnterCode : handleCreateGroup}
           onJoin={handleJoinGroup}
+          onRejoin={handleRejoinGroup}
+          onEnterCode={() => setModal('entercode')}
+          myGroups={myGroups}
           defaultCode={modal === 'entercode' ? (localStorage.getItem('goldticket_last_code') || '') : ''}/>
       )}
       {shareBlob && <ShareSheet pdfBlob={shareBlob} onClose={() => setShareBlob(null)}/>}
