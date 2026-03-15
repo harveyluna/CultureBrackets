@@ -1932,6 +1932,94 @@ function CategoryPage({ categoryId, picks, winners, onPick, onBack, groupMembers
 }
 
 /* ─────────────────────────────────────────────
+   SCORE GRAPH
+───────────────────────────────────────────── */
+function ScoreGraph({ members, groupPicksMap, winners, sessionId }) {
+  const announced = CATEGORIES.filter(c => winners[c.id]);
+  if (announced.length === 0 || members.length < 2) return null;
+
+  const COLORS = ['#D4A843','#4a9eff','#5dce7a','#ff6b9d','#ff9f43','#c084fc','#fb923c','#34d399'];
+
+  // Build cumulative score series per member
+  const series = members.map((m, idx) => {
+    const picks = groupPicksMap[m.id] || {};
+    let cum = 0;
+    const pts = [0];
+    announced.forEach(cat => {
+      if (picks[cat.id]?.name === winners[cat.id]) cum++;
+      pts.push(cum);
+    });
+    return { m, pts, color: COLORS[idx % COLORS.length] };
+  });
+
+  // SVG layout
+  const W = 560, H = 220;
+  const PL = 28, PR = 110, PT = 14, PB = 30;
+  const cW = W - PL - PR, cH = H - PT - PB;
+  const N  = announced.length;
+  const maxY = Math.max(...series.flatMap(s => s.pts), 1);
+
+  const xp = i => PL + (N === 0 ? 0 : (i / N) * cW);
+  const yp = v => PT + (1 - v / maxY) * cH;
+
+  // Spread overlapping end-labels vertically
+  const sorted = [...series].sort((a, b) => b.pts[N] - a.pts[N]);
+  const labelY = {};
+  const MIN_GAP = 16;
+  sorted.forEach(({ m }, i) => {
+    const ideal = yp(sorted[i].pts[N]);
+    const prev  = i === 0 ? -Infinity : labelY[sorted[i-1].m.id];
+    labelY[m.id] = Math.max(ideal, prev + MIN_GAP);
+  });
+
+  const yTicks = Array.from({ length: maxY + 1 }, (_, i) => i);
+
+  return (
+    <div style={{ margin: '0 0 28px', background: '#161616', borderRadius: 14, border: '1px solid #222', padding: '16px 16px 4px' }}>
+      <div style={{ fontSize: '0.75rem', color: '#555', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Score Progression</div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block', overflow: 'visible' }}>
+        {/* horizontal grid + y labels */}
+        {yTicks.map(v => (
+          <g key={v}>
+            <line x1={PL} y1={yp(v)} x2={PL + cW} y2={yp(v)} stroke={v === 0 ? '#333' : '#1e1e1e'} strokeWidth="1" />
+            <text x={PL - 5} y={yp(v) + 4} fill="#444" fontSize="10" textAnchor="end">{v}</text>
+          </g>
+        ))}
+        {/* vertical category dividers */}
+        {announced.map((_, i) => (
+          <line key={i} x1={xp(i + 1)} y1={PT} x2={xp(i + 1)} y2={PT + cH} stroke="#1c1c1c" strokeWidth="1" />
+        ))}
+        {/* x-axis baseline */}
+        <line x1={PL} y1={PT + cH} x2={PL + cW} y2={PT + cH} stroke="#333" strokeWidth="1" />
+        {/* x-axis label */}
+        <text x={PL + cW / 2} y={H - 4} fill="#444" fontSize="10" textAnchor="middle">
+          {N} of {CATEGORIES.length} categories announced
+        </text>
+
+        {/* Lines, dots, and end labels per member */}
+        {series.map(({ m, pts, color }) => {
+          const points = pts.map((v, i) => `${xp(i)},${yp(v)}`).join(' ');
+          const isMe   = m.session_id === sessionId;
+          return (
+            <g key={m.id}>
+              <polyline points={points} fill="none" stroke={color}
+                strokeWidth={isMe ? 2.5 : 1.8} strokeLinejoin="round" strokeLinecap="round" />
+              {pts.map((v, i) => (
+                <circle key={i} cx={xp(i)} cy={yp(v)} r={i === 0 || i === N ? 4 : 2.5} fill={color} />
+              ))}
+              <text x={xp(N) + 8} y={labelY[m.id] + 4} fill={color}
+                fontSize="12" fontWeight={isMe ? '700' : '500'}>
+                {m.display_name}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    LEADERBOARD PAGE
 ───────────────────────────────────────────── */
 function LeaderboardPage({ members, groupPicksMap, winners, sessionId }) {
@@ -1958,6 +2046,8 @@ function LeaderboardPage({ members, groupPicksMap, winners, sessionId }) {
           ? 'Scores will be tabulated once Oscar winners are announced. The person with the most number of correct Oscar predictions wins.'
           : `${winnersSet} of ${totalCats} winners announced`}
       </p>
+
+      <ScoreGraph members={members} groupPicksMap={groupPicksMap} winners={winners} sessionId={sessionId} />
 
       {members.length === 0 ? (
         <div className="lb-no-winners">
