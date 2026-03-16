@@ -1757,7 +1757,7 @@ function HomePage({ picks, winners, onPick, onClearAll, onExport, currentGroup, 
       {/* Lock countdown strip */}
       {isLocked ? (
         <div className="lock-strip locked">
-          🔒 Picks are locked — Oscar night is here!{' '}
+          Selections are <strong>OPEN!</strong> Announced winner categories are <strong>LOCKED!</strong>{' '}
           <a href="https://www.oscars.org/how-to-watch/" target="_blank" rel="noopener noreferrer" className="watch-link">Watch the Oscars live!</a>
         </div>
       ) : (
@@ -2272,6 +2272,21 @@ function App() {
     });
     if (currentGroup) loadGroupData(currentGroup);
   }, [currentGroup?.id]);
+
+  // ── Real-time subscription: update winners live for all users ──
+  useEffect(() => {
+    const channel = supabase
+      .channel('winners-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'winners' }, () => {
+        supabase.from('winners').select('*').then(({ data }) => {
+          const w = {};
+          (data || []).forEach(r => { w[r.category_id] = r.winner_name; });
+          setWinners(w);
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   // ── Immediate save when user hides the tab / closes the app ──
   // Uses picksRef so the callback always reads the latest picks without stale closure.
